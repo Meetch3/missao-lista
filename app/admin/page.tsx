@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 
 type Item = {
   id: number;
@@ -10,17 +10,30 @@ type Item = {
   quantity: number;
 };
 
+type Donation = {
+  id: number;
+  donor_name: string;
+  quantity: number;
+  created_at: string;
+  item_id: number;
+  item_name: string;
+};
+
 export default function AdminPage() {
   const [autenticado, setAutenticado] = useState(false);
   const [verificando, setVerificando] = useState(true);
   const [senha, setSenha] = useState('');
   const [itens, setItens] = useState<Item[]>([]);
+  const [doacoes, setDoacoes] = useState<Donation[]>([]);
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('Geral');
   const [quantidade, setQuantidade] = useState('1');
   const [editando, setEditando] = useState<number | null>(null);
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const [carregandoDoacoes, setCarregandoDoacoes] = useState(false);
+  const [buscaDoador, setBuscaDoador] = useState('');
+  const [filtroItem, setFiltroItem] = useState('Todos');
 
   async function verificarLogin() {
     try {
@@ -36,7 +49,11 @@ export default function AdminPage() {
 
   async function carregarItens() {
     const resposta = await fetch('/api/items', { cache: 'no-store' });
-    if (!resposta.ok) throw new Error('Falha ao carregar itens.');
+
+    if (!resposta.ok) {
+      throw new Error('Falha ao carregar itens.');
+    }
+
     const dados = await resposta.json();
 
     setItens(
@@ -54,6 +71,33 @@ export default function AdminPage() {
     );
   }
 
+  async function carregarDoacoes() {
+    setCarregandoDoacoes(true);
+
+    try {
+      const resposta = await fetch('/api/admin/donation', {
+        cache: 'no-store',
+      });
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(
+          dados.error || 'Não foi possível carregar o histórico de doações.'
+        );
+      }
+
+      setDoacoes(dados as Donation[]);
+    } catch (e) {
+      setMensagem(
+        e instanceof Error
+          ? e.message
+          : 'Erro ao carregar o histórico de doações.'
+      );
+    } finally {
+      setCarregandoDoacoes(false);
+    }
+  }
+
   useEffect(() => {
     void verificarLogin();
   }, []);
@@ -61,6 +105,9 @@ export default function AdminPage() {
   useEffect(() => {
     if (autenticado) {
       carregarItens().catch(() => setMensagem('Erro ao carregar a lista.'));
+      void carregarDoacoes();
+    } else {
+      setDoacoes([]);
     }
   }, [autenticado]);
 
@@ -136,7 +183,11 @@ export default function AdminPage() {
   }
 
   async function excluirItem(id: number) {
-    if (!window.confirm('Excluir este item e as doações vinculadas a ele?')) {
+    if (
+      !window.confirm(
+        'Excluir este item e as doações vinculadas a ele? O histórico dessas doações também poderá ser apagado.'
+      )
+    ) {
       return;
     }
 
@@ -157,7 +208,12 @@ export default function AdminPage() {
       }
 
       await carregarItens();
-      if (editando === id) limparFormulario();
+      await carregarDoacoes();
+
+      if (editando === id) {
+        limparFormulario();
+      }
+
       setMensagem('Item excluído.');
     } catch {
       setMensagem('Erro de conexão ao excluir.');
@@ -167,11 +223,55 @@ export default function AdminPage() {
   }
 
   async function sair() {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    setAutenticado(false);
-    setItens([]);
-    setMensagem('Você saiu do painel.');
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } finally {
+      setAutenticado(false);
+      setItens([]);
+      setDoacoes([]);
+      setMensagem('Você saiu do painel.');
+    }
   }
+
+  const doacoesFiltradas = useMemo(() => {
+    const busca = buscaDoador.trim().toLocaleLowerCase('pt-BR');
+
+    return doacoes.filter((doacao) => {
+      const correspondeNome = doacao.donor_name
+        .toLocaleLowerCase('pt-BR')
+        .includes(busca);
+
+      const correspondeItem =
+        filtroItem === 'Todos' || String(doacao.item_id) === filtroItem;
+
+      return correspondeNome && correspondeItem;
+    });
+  }, [doacoes, buscaDoador, filtroItem]);
+
+  const totalUnidadesDoadas = useMemo(
+    () => doacoes.reduce((total, doacao) => total + doacao.quantity, 0),
+    [doacoes]
+  );
+
+  const totalDoadores = useMemo(
+    () =>
+      new Set(
+        doacoes.map((doacao) =>
+          doacao.donor_name.trim().toLocaleLowerCase('pt-BR')
+        )
+      ).size,
+    [doacoes]
+  );
+
+  const opcoesItens = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          doacoes.map((doacao) => [doacao.item_id, doacao.item_name])
+        ).entries()
+      ),
+    [doacoes]
+  );
 
   if (verificando) {
     return <main style={estilos.pagina}>Verificando acesso...</main>;
@@ -196,13 +296,17 @@ export default function AdminPage() {
                 style={estilos.input}
               />
             </label>
+
             <button disabled={carregando} style={estilos.botao}>
               {carregando ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
           {mensagem && <p role="status">{mensagem}</p>}
-          <a href="/" style={estilos.link}>Voltar à lista pública</a>
+
+          <a href="/" style={estilos.link}>
+            Voltar à lista pública
+          </a>
         </section>
       </main>
     );
@@ -216,10 +320,25 @@ export default function AdminPage() {
             <h1>Painel da missão</h1>
             <p>Cadastre e organize os itens necessários.</p>
           </div>
-          <button onClick={sair} style={estilos.botaoSecundario}>
+
+          <button onClick={() => void sair()} style={estilos.botaoSecundario}>
             Sair
           </button>
         </header>
+
+        {mensagem && (
+          <div role="status" style={estilos.mensagem}>
+            <span>{mensagem}</span>
+            <button
+              type="button"
+              onClick={() => setMensagem('')}
+              aria-label="Fechar mensagem"
+              style={estilos.fecharMensagem}
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         <form onSubmit={salvarItem} style={estilos.formulario}>
           <h2>{editando === null ? 'Novo item' : 'Editar item'}</h2>
@@ -263,54 +382,191 @@ export default function AdminPage() {
 
           <div style={estilos.acoes}>
             <button disabled={carregando} style={estilos.botao}>
-              {carregando ? 'Salvando...' : editando === null ? 'Cadastrar item' : 'Salvar alterações'}
+              {carregando
+                ? 'Salvando...'
+                : editando === null
+                  ? 'Cadastrar item'
+                  : 'Salvar alterações'}
             </button>
+
             {editando !== null && (
-              <button type="button" onClick={limparFormulario} style={estilos.botaoSecundario}>
+              <button
+                type="button"
+                onClick={limparFormulario}
+                style={estilos.botaoSecundario}
+              >
                 Cancelar edição
               </button>
             )}
           </div>
         </form>
 
-        {mensagem && <p role="status">{mensagem}</p>}
+        <section style={estilos.secao}>
+          <h2>Itens cadastrados ({itens.length})</h2>
 
-        <h2>Itens cadastrados ({itens.length})</h2>
+          {itens.length === 0 && <p>Nenhum item cadastrado ainda.</p>}
 
-        {itens.length === 0 && <p>Nenhum item cadastrado ainda.</p>}
+          <div style={estilos.lista}>
+            {itens.map((item) => (
+              <article key={item.id} style={estilos.item}>
+                <div style={estilos.detalhesItem}>
+                  <strong>{item.name}</strong>
+                  <p>
+                    {item.category} · Necessários: {item.quantity}
+                  </p>
+                </div>
 
-        <div style={estilos.lista}>
-          {itens.map((item) => (
-            <article key={item.id} style={estilos.item}>
-              <div>
-                <strong>{item.name}</strong>
-                <p>{item.category} · Necessários: {item.quantity}</p>
-              </div>
-              <div style={estilos.acoes}>
-                <button
-                  onClick={() => {
-                    setEditando(item.id);
-                    setNome(item.name);
-                    setCategoria(item.category);
-                    setQuantidade(String(item.quantity));
-                  }}
-                  style={estilos.botaoSecundario}
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => void excluirItem(item.id)}
-                  disabled={carregando}
-                  style={estilos.botaoExcluir}
-                >
-                  Excluir
-                </button>
-              </div>
+                <div style={estilos.acoes}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditando(item.id);
+                      setNome(item.name);
+                      setCategoria(item.category);
+                      setQuantidade(String(item.quantity));
+                    }}
+                    style={estilos.botaoSecundario}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void excluirItem(item.id)}
+                    disabled={carregando}
+                    style={estilos.botaoExcluir}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section style={estilos.historico}>
+          <header style={estilos.cabecalhoHistorico}>
+            <div>
+              <h2 style={estilos.tituloHistorico}>Histórico de doações</h2>
+              <p style={estilos.subtituloHistorico}>
+                Consulte quem contribuiu, quais itens foram doados e quando.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void carregarDoacoes()}
+              disabled={carregandoDoacoes}
+              style={estilos.botaoSecundario}
+            >
+              {carregandoDoacoes ? 'Atualizando...' : 'Atualizar histórico'}
+            </button>
+          </header>
+
+          <div style={estilos.resumoDoacoes}>
+            <article style={estilos.cartaoResumo}>
+              <span style={estilos.rotuloResumo}>Registros de doação</span>
+              <strong style={estilos.numeroResumo}>{doacoes.length}</strong>
             </article>
-          ))}
-        </div>
 
-        <p><a href="/">Ver lista pública</a></p>
+            <article style={estilos.cartaoResumo}>
+              <span style={estilos.rotuloResumo}>Unidades doadas</span>
+              <strong style={estilos.numeroResumo}>
+                {totalUnidadesDoadas}
+              </strong>
+            </article>
+
+            <article style={estilos.cartaoResumo}>
+              <span style={estilos.rotuloResumo}>Doadores identificados</span>
+              <strong style={estilos.numeroResumo}>{totalDoadores}</strong>
+            </article>
+          </div>
+
+          <div style={estilos.filtrosDoacoes}>
+            <label style={estilos.labelFiltro}>
+              Buscar doador
+              <input
+                type="search"
+                value={buscaDoador}
+                onChange={(e) => setBuscaDoador(e.target.value)}
+                placeholder="Digite o nome do doador..."
+                aria-label="Buscar doador pelo nome"
+                style={estilos.input}
+              />
+            </label>
+
+            <label style={estilos.labelFiltro}>
+              Filtrar por item
+              <select
+                value={filtroItem}
+                onChange={(e) => setFiltroItem(e.target.value)}
+                aria-label="Filtrar doações por item"
+                style={estilos.input}
+              >
+                <option value="Todos">Todos os itens</option>
+                {opcoesItens.map(([id, nomeItem]) => (
+                  <option key={id} value={String(id)}>
+                    {nomeItem}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {carregandoDoacoes ? (
+            <p style={estilos.estadoHistorico}>Carregando histórico...</p>
+          ) : doacoesFiltradas.length === 0 ? (
+            <p style={estilos.estadoHistorico}>
+              {doacoes.length === 0
+                ? 'Ainda não há doações registradas.'
+                : 'Nenhuma doação corresponde à sua busca.'}
+            </p>
+          ) : (
+            <>
+              <p style={estilos.contagemResultados}>
+                Exibindo {doacoesFiltradas.length}{' '}
+                {doacoesFiltradas.length === 1
+                  ? 'registro'
+                  : 'registros'}
+              </p>
+
+              <div style={estilos.tabelaResponsiva}>
+                <table style={estilos.tabelaDoacoes}>
+                  <thead>
+                    <tr>
+                      <th style={estilos.celulaCabecalho}>Doador</th>
+                      <th style={estilos.celulaCabecalho}>Item</th>
+                      <th style={estilos.celulaCabecalho}>Quantidade</th>
+                      <th style={estilos.celulaCabecalho}>Data</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {doacoesFiltradas.map((doacao) => (
+                      <tr key={doacao.id}>
+                        <td style={estilos.celula}>
+                          <strong>{doacao.donor_name}</strong>
+                        </td>
+                        <td style={estilos.celula}>{doacao.item_name}</td>
+                        <td style={estilos.celula}>{doacao.quantity}</td>
+                        <td style={estilos.celula}>
+                          {new Date(doacao.created_at).toLocaleString('pt-BR', {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </section>
+
+        <p style={estilos.linkFinal}>
+          <a href="/">Ver lista pública</a>
+        </p>
       </section>
     </main>
   );
@@ -324,7 +580,7 @@ const estilos: Record<string, React.CSSProperties> = {
     color: '#17202a',
     fontFamily: 'Arial, sans-serif',
   },
-  conteudo: { maxWidth: 760, margin: '0 auto' },
+  conteudo: { maxWidth: 900, margin: '0 auto' },
   cartao: {
     maxWidth: 420,
     margin: '60px auto',
@@ -346,6 +602,7 @@ const estilos: Record<string, React.CSSProperties> = {
     gap: 16,
     padding: 22,
     background: '#fff',
+    border: '1px solid #e1e8df',
     borderRadius: 14,
     marginBottom: 24,
   },
@@ -358,6 +615,8 @@ const estilos: Record<string, React.CSSProperties> = {
     border: '1px solid #ccd2d8',
     borderRadius: 8,
     fontSize: 16,
+    background: '#fff',
+    color: '#17202a',
   },
   botao: {
     padding: '12px 16px',
@@ -384,6 +643,7 @@ const estilos: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   acoes: { display: 'flex', gap: 8, flexWrap: 'wrap' },
+  secao: { marginBottom: 32 },
   lista: { display: 'grid', gap: 12 },
   item: {
     display: 'flex',
@@ -393,7 +653,113 @@ const estilos: Record<string, React.CSSProperties> = {
     gap: 12,
     padding: 18,
     background: '#fff',
+    border: '1px solid #e1e8df',
     borderRadius: 12,
   },
+  detalhesItem: { minWidth: 0, overflowWrap: 'anywhere' },
+  mensagem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    padding: '12px 16px',
+    marginBottom: 20,
+    background: '#fff',
+    border: '1px solid #dbe5dc',
+    borderRadius: 10,
+    overflowWrap: 'anywhere',
+  },
+  fecharMensagem: {
+    flexShrink: 0,
+    border: 0,
+    background: 'transparent',
+    fontSize: 22,
+    cursor: 'pointer',
+    color: '#617167',
+  },
+  historico: {
+    padding: 22,
+    marginTop: 32,
+    marginBottom: 24,
+    background: '#fff',
+    border: '1px solid #e1e8df',
+    borderRadius: 14,
+    boxShadow: '0 4px 20px #20382b0a',
+  },
+  cabecalhoHistorico: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 20,
+  },
+  tituloHistorico: { margin: 0 },
+  subtituloHistorico: {
+    marginTop: 8,
+    marginBottom: 0,
+    color: '#66736b',
+    lineHeight: 1.5,
+  },
+  resumoDoacoes: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gap: 12,
+    marginBottom: 20,
+  },
+  cartaoResumo: {
+    display: 'grid',
+    gap: 8,
+    padding: 16,
+    background: '#f4f7f1',
+    border: '1px solid #e1e8df',
+    borderRadius: 10,
+  },
+  rotuloResumo: { color: '#617167', fontSize: 13 },
+  numeroResumo: { color: '#286744', fontSize: 28 },
+  filtrosDoacoes: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: 12,
+    marginBottom: 18,
+  },
+  labelFiltro: { minWidth: 0 },
+  estadoHistorico: {
+    padding: 22,
+    textAlign: 'center',
+    color: '#617167',
+    background: '#f8faf7',
+    borderRadius: 10,
+    lineHeight: 1.5,
+  },
+  contagemResultados: {
+    color: '#617167',
+    fontSize: 13,
+    marginBottom: 10,
+  },
+  tabelaResponsiva: {
+    width: '100%',
+    overflowX: 'auto',
+  },
+  tabelaDoacoes: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    textAlign: 'left',
+    fontSize: 14,
+  },
+  celulaCabecalho: {
+    padding: '12px 10px',
+    background: '#f4f7f1',
+    color: '#286744',
+    borderBottom: '1px solid #dfe7dc',
+    whiteSpace: 'nowrap',
+  },
+  celula: {
+    padding: '13px 10px',
+    borderBottom: '1px solid #edf0eb',
+    color: '#28392f',
+    verticalAlign: 'top',
+  },
   link: { display: 'inline-block', marginTop: 16 },
+  linkFinal: { marginTop: 24 },
 };

@@ -12,29 +12,6 @@ type Item = {
   remaining_quantity: number;
 };
 
-const campo = {
-  width: '100%',
-  boxSizing: 'border-box' as const,
-  padding: '12px 14px',
-  border: '1px solid #d8e2d6',
-  borderRadius: 10,
-  background: '#fff',
-  color: '#20382b',
-  fontSize: 15,
-};
-
-const botao = {
-  width: '100%',
-  padding: 13,
-  border: 0,
-  borderRadius: 10,
-  background: '#286744',
-  color: '#fff',
-  fontWeight: 700,
-  fontSize: 15,
-  cursor: 'pointer',
-};
-
 export default function Home() {
   const [itens, setItens] = useState<Item[]>([]);
   const [filtro, setFiltro] = useState('Todos');
@@ -79,13 +56,20 @@ export default function Home() {
     [itens]
   );
 
+  const concluidos = itens.filter(
+    item => item.remaining_quantity === 0
+  ).length;
+
   const progresso = totalNecessario > 0
-    ? Math.min(100, Math.round((totalDoado / totalNecessario) * 100))
+    ? Math.min(100, Math.round(totalDoado / totalNecessario * 100))
     : 0;
 
-  const categorias = ['Todos', ...Array.from(
-    new Set(itens.map(item => item.category))
-  )];
+  const categorias = [
+    'Todos',
+    'Pendentes',
+    'Concluídos',
+    ...new Set(itens.map(item => item.category)),
+  ];
 
   const listaFiltrada = itens.filter(item => {
     if (filtro === 'Pendentes') return item.remaining_quantity > 0;
@@ -113,7 +97,9 @@ export default function Home() {
       quantidade > item.remaining_quantity
     ) {
       setErro(true);
-      setMensagem(`Informe uma quantidade entre 1 e ${item.remaining_quantity}.`);
+      setMensagem(
+        `Informe uma quantidade entre 1 e ${item.remaining_quantity}.`
+      );
       return;
     }
 
@@ -133,13 +119,20 @@ export default function Home() {
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        throw new Error(dados.error || 'Não foi possível registrar a doação.');
+        throw new Error(
+          dados.error || 'Não foi possível registrar a doação.'
+        );
       }
 
-      setMensagem(`Doação de ${quantidade} unidade(s) de "${item.name}" registrada com sucesso. Obrigado!`);
+      setMensagem(
+        `Sua contribuição de ${quantidade} unidade(s) de "${item.name}" foi registrada. Muito obrigado!`
+      );
       setErro(false);
       setNomeDoador('');
-      setQuantidades(anterior => ({ ...anterior, [item.id]: '1' }));
+      setQuantidades(anterior => ({
+        ...anterior,
+        [item.id]: '1',
+      }));
 
       await carregarItens();
     } catch (e) {
@@ -154,278 +147,318 @@ export default function Home() {
   }
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      background: '#f4f7f1',
-      color: '#20382b',
-      padding: '32px 18px',
-      fontFamily: 'Arial, sans-serif',
-    }}>
-      <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <header style={{ marginBottom: 28 }}>
-          <p style={{
-            color: '#39744e',
-            fontWeight: 700,
-            letterSpacing: 2,
-            fontSize: 13,
-          }}>
-            LISTA MISSIONÁRIA
-          </p>
+    <main className="mission-page">
+      <div className="ambient ambient-one" aria-hidden="true" />
+      <div className="ambient ambient-two" aria-hidden="true" />
 
-          <h1 style={{
-            fontSize: 'clamp(30px, 5vw, 46px)',
-            lineHeight: 1.15,
-            marginBottom: 12,
-          }}>
-            Uma missão, muitas mãos.
-          </h1>
+      <div className="mission-container">
+        <header className="topbar">
+          <a href="#inicio" className="brand">
+            <span className="brand-mark" aria-hidden="true">✳</span>
+            <span>
+              <strong>Lista Missionária</strong>
+              <small>Uma missão, muitas mãos</small>
+            </span>
+          </a>
 
-          <p style={{ color: '#617167', lineHeight: 1.7, maxWidth: 650 }}>
-            Confira os itens necessários, escolha o que deseja doar e
-            acompanhe o progresso. Cada contribuição faz diferença!
-          </p>
+          <a className="admin-link" href="/admin">
+            Área administrativa <span aria-hidden="true">↗</span>
+          </a>
         </header>
 
-        <section style={{
-          background: '#fff',
-          borderRadius: 20,
-          padding: 24,
-          marginBottom: 24,
-          boxShadow: '0 5px 24px #20382b0a',
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}>
-            <strong>Progresso geral das doações</strong>
-            <strong style={{ color: '#286744', fontSize: 22 }}>
-              {progresso}%
-            </strong>
+        <section className="hero" id="inicio">
+          <div className="hero-copy">
+            <span className="eyebrow">
+              <span className="live-dot" />
+              JUNTOS POR UM PROPÓSITO
+            </span>
+
+            <h1>
+              Pequenas atitudes.
+              <br />
+              <span>Uma grande missão.</span>
+            </h1>
+
+            <p>
+              Cada contribuição nos aproxima do nosso objetivo.
+              Veja o que precisamos, escolha como ajudar e acompanhe
+              o progresso da missão.
+            </p>
+
+            <a className="primary-link" href="#itens">
+              Ver itens necessários <span aria-hidden="true">↓</span>
+            </a>
+
+            <div className="hero-note">
+              <span aria-hidden="true">♡</span>
+              Toda contribuição faz diferença.
+            </div>
           </div>
 
-          <div style={{
-            height: 13,
-            background: '#e4ebe2',
-            borderRadius: 20,
-            overflow: 'hidden',
-            marginTop: 15,
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${progresso}%`,
-              background: '#398052',
-              borderRadius: 20,
-              transition: 'width .3s',
-            }} />
+          <div className="hero-art" aria-label="Ilustração de mãos ajudando">
+            <div className="art-circle art-circle-back" />
+            <div className="art-circle art-circle-front" />
+            <div className="art-spark spark-one">✦</div>
+            <div className="art-spark spark-two">✳</div>
+            <div className="art-card">
+              <span className="art-icon">♡</span>
+              <strong>Juntos fazemos mais</strong>
+              <span>Cada gesto conta</span>
+            </div>
+            <div className="art-leaf leaf-one">❋</div>
+            <div className="art-leaf leaf-two">❋</div>
+          </div>
+        </section>
+
+        <section className="overview" aria-label="Resumo das doações">
+          <div className="overview-heading">
+            <div>
+              <span className="section-kicker">NOSSO PROGRESSO</span>
+              <h2>Cada ajuda nos aproxima.</h2>
+            </div>
+            <span className="overview-percent">{progresso}%</span>
           </div>
 
-          <p style={{ color: '#617167', lineHeight: 1.6, marginBottom: 0 }}>
-            {totalDoado} de {totalNecessario} unidades doadas.
-            {' '}{Math.max(0, totalNecessario - totalDoado)} restantes.
-          </p>
+          <div
+            className="progress-track progress-track-large"
+            role="progressbar"
+            aria-label="Progresso geral das doações"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progresso}
+          >
+            <div
+              className="progress-fill"
+              style={{ width: `${progresso}%` }}
+            />
+          </div>
+
+          <div className="overview-bottom">
+            <span>
+              <strong>{totalDoado}</strong> de {totalNecessario} unidades doadas
+            </span>
+            <span>{Math.max(0, totalNecessario - totalDoado)} unidades restantes</span>
+          </div>
+
+          <div className="stats-grid">
+            <div className="stat-card">
+              <span className="stat-icon stat-icon-green" aria-hidden="true">▦</span>
+              <div>
+                <strong>{itens.length}</strong>
+                <span>Itens na lista</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon stat-icon-yellow" aria-hidden="true">♡</span>
+              <div>
+                <strong>{totalDoado}</strong>
+                <span>Unidades doadas</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <span className="stat-icon stat-icon-blue" aria-hidden="true">✓</span>
+              <div>
+                <strong>{concluidos}</strong>
+                <span>Objetivos concluídos</span>
+              </div>
+            </div>
+          </div>
         </section>
 
         {mensagem && (
-          <div role="status" aria-live="polite" style={{
-            padding: 14,
-            borderRadius: 12,
-            marginBottom: 20,
-            background: erro ? '#fff0ed' : '#e8f2e8',
-            color: erro ? '#9d3024' : '#286744',
-            lineHeight: 1.5,
-          }}>
-            {mensagem}
+          <div
+            role="status"
+            aria-live="polite"
+            className={`notice ${erro ? 'notice-error' : 'notice-success'}`}
+          >
+            <span aria-hidden="true">{erro ? '!' : '✓'}</span>
+            <p>{mensagem}</p>
+            <button
+              type="button"
+              className="notice-close"
+              aria-label="Fechar mensagem"
+              onClick={() => setMensagem('')}
+            >
+              ×
+            </button>
           </div>
         )}
 
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-          marginBottom: 18,
-        }}>
-          <h2 style={{ margin: 0 }}>Itens necessários</h2>
+        <section className="items-section" id="itens">
+          <div className="section-heading">
+            <div>
+              <span className="section-kicker">COMO VOCÊ PODE AJUDAR</span>
+              <h2>Itens necessários</h2>
+              <p>Escolha um item e a quantidade que deseja contribuir.</p>
+            </div>
+            <span className="items-count">{listaFiltrada.length} itens</span>
+          </div>
 
-          <select
-            value={filtro}
-            onChange={e => setFiltro(e.target.value)}
-            aria-label="Filtrar itens"
-            style={{ ...campo, width: 'auto', maxWidth: '100%' }}
-          >
+          <div className="filter-list" aria-label="Filtrar itens">
             {categorias.map(categoria => (
-              <option key={categoria} value={categoria}>{categoria}</option>
+              <button
+                type="button"
+                key={categoria}
+                onClick={() => setFiltro(categoria)}
+                className={`filter-chip ${filtro === categoria ? 'filter-active' : ''}`}
+                aria-pressed={filtro === categoria}
+              >
+                {categoria}
+              </button>
             ))}
-            <option value="Pendentes">Somente pendentes</option>
-            <option value="Concluídos">Somente concluídos</option>
-          </select>
-        </div>
+          </div>
 
-        {carregando ? (
-          <p style={{ padding: 24, textAlign: 'center', color: '#617167' }}>
-            Carregando a lista...
-          </p>
-        ) : itens.length === 0 ? (
-          <section style={{
-            background: '#fff',
-            borderRadius: 16,
-            padding: 24,
-            textAlign: 'center',
-          }}>
-            <h3>A lista ainda está vazia.</h3>
-            <p style={{ color: '#617167', lineHeight: 1.6 }}>
-              Os itens cadastrados pela administração aparecerão aqui.
-            </p>
-          </section>
-        ) : (
-          <section style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-            gap: 16,
-          }}>
-            {listaFiltrada.map(item => {
-              const percentual = item.required_quantity > 0
-                ? Math.min(100, Math.round(
-                    item.donated_quantity / item.required_quantity * 100
-                  ))
-                : 0;
-              const concluido = item.remaining_quantity === 0;
+          {carregando ? (
+            <div className="empty-state">
+              <span className="loading-spinner" />
+              <p>Preparando a lista...</p>
+            </div>
+          ) : itens.length === 0 ? (
+            <div className="empty-state">
+              <span className="empty-icon">♡</span>
+              <h3>Estamos preparando a missão.</h3>
+              <p>Os itens cadastrados aparecerão aqui em breve.</p>
+            </div>
+          ) : (
+            <div className="items-grid">
+              {listaFiltrada.map((item, index) => {
+                const percentual = item.required_quantity > 0
+                  ? Math.min(
+                      100,
+                      Math.round(
+                        item.donated_quantity / item.required_quantity * 100
+                      )
+                    )
+                  : 0;
 
-              return (
-                <article key={item.id} style={{
-                  background: '#fff',
-                  border: '1px solid #e1e8df',
-                  borderRadius: 16,
-                  padding: 20,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                }}>
-                  <p style={{
-                    color: '#39744e',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    margin: 0,
-                  }}>
-                    {item.category}
-                  </p>
+                const concluido = item.remaining_quantity === 0;
 
-                  <h3 style={{ fontSize: 21, margin: 0 }}>{item.name}</h3>
-
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 8,
-                    color: '#617167',
-                    fontSize: 14,
-                  }}>
-                    <span>Doado: {item.donated_quantity}</span>
-                    <span>Necessário: {item.required_quantity}</span>
-                  </div>
-
-                  <div style={{
-                    height: 8,
-                    background: '#e4ebe2',
-                    borderRadius: 20,
-                    overflow: 'hidden',
-                  }}>
-                    <div style={{
-                      width: `${percentual}%`,
-                      height: '100%',
-                      background: '#398052',
-                    }} />
-                  </div>
-
-                  <p style={{
-                    margin: 0,
-                    color: concluido ? '#286744' : '#617167',
-                    fontWeight: concluido ? 700 : 400,
-                    fontSize: 14,
-                  }}>
-                    {concluido
-                      ? '✓ Quantidade completa!'
-                      : `Faltam ${item.remaining_quantity} unidade(s)`}
-                  </p>
-
-                  {!concluido && (
-                    <div style={{
-                      borderTop: '1px solid #edf0eb',
-                      paddingTop: 14,
-                      display: 'grid',
-                      gap: 10,
-                      marginTop: 'auto',
-                    }}>
-                      <label style={{ display: 'grid', gap: 6, fontSize: 14 }}>
-                        Seu nome
-                        <input
-                          value={nomeDoador}
-                          onChange={e => setNomeDoador(e.target.value)}
-                          placeholder="Digite seu nome"
-                          maxLength={100}
-                          autoComplete="name"
-                          style={campo}
-                        />
-                      </label>
-
-                      <label style={{ display: 'grid', gap: 6, fontSize: 14 }}>
-                        Quantidade que deseja doar
-                        <input
-                          type="number"
-                          min="1"
-                          max={item.remaining_quantity}
-                          step="1"
-                          value={quantidades[item.id] ?? '1'}
-                          onChange={e => setQuantidades(anterior => ({
-                            ...anterior,
-                            [item.id]: e.target.value,
-                          }))}
-                          style={campo}
-                        />
-                      </label>
-
-                      <button
-                        type="button"
-                        disabled={enviando !== null}
-                        onClick={() => void registrarDoacao(item)}
-                        style={{
-                          ...botao,
-                          opacity: enviando !== null ? 0.65 : 1,
-                          cursor: enviando !== null ? 'wait' : 'pointer',
-                        }}
-                      >
-                        {enviando === item.id
-                          ? 'Registrando...'
-                          : 'Quero doar'}
-                      </button>
+                return (
+                  <article
+                    key={item.id}
+                    className={`item-card ${concluido ? 'item-card-complete' : ''}`}
+                    style={{ animationDelay: `${Math.min(index, 8) * 55}ms` }}
+                  >
+                    <div className="item-card-top">
+                      <span className="category-label">{item.category}</span>
+                      {concluido ? (
+                        <span className="complete-badge">✓ Concluído</span>
+                      ) : (
+                        <span className="remaining-badge">
+                          Faltam {item.remaining_quantity}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </article>
-              );
-            })}
-          </section>
-        )}
 
-        {!carregando && itens.length > 0 && listaFiltrada.length === 0 && (
-          <p style={{ color: '#617167', textAlign: 'center', padding: 20 }}>
-            Nenhum item encontrado neste filtro.
+                    <h3>{item.name}</h3>
+
+                    <div className="item-numbers">
+                      <div>
+                        <strong>{item.donated_quantity}</strong>
+                        <span>Já doados</span>
+                      </div>
+                      <div className="numbers-divider" />
+                      <div>
+                        <strong>{item.required_quantity}</strong>
+                        <span>Meta total</span>
+                      </div>
+                      <strong className="item-percent">{percentual}%</strong>
+                    </div>
+
+                    <div
+                      className="progress-track"
+                      role="progressbar"
+                      aria-label={`Progresso de ${item.name}`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={percentual}
+                    >
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${percentual}%` }}
+                      />
+                    </div>
+
+                    {concluido ? (
+                      <div className="completed-message">
+                        <span aria-hidden="true">✦</span>
+                        Este objetivo foi alcançado. Obrigado!
+                      </div>
+                    ) : (
+                      <div className="donation-form">
+                        <label>
+                          <span>Seu nome</span>
+                          <input
+                            value={nomeDoador}
+                            onChange={e => setNomeDoador(e.target.value)}
+                            placeholder="Como podemos te chamar?"
+                            maxLength={100}
+                            autoComplete="name"
+                          />
+                        </label>
+
+                        <label>
+                          <span>Quantidade para doar</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max={item.remaining_quantity}
+                            step="1"
+                            value={quantidades[item.id] ?? '1'}
+                            onChange={e => setQuantidades(anterior => ({
+                              ...anterior,
+                              [item.id]: e.target.value,
+                            }))}
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          className="donate-button"
+                          disabled={enviando !== null}
+                          onClick={() => void registrarDoacao(item)}
+                        >
+                          {enviando === item.id
+                            ? 'Registrando contribuição...'
+                            : 'Quero contribuir'}
+                          {enviando !== item.id && (
+                            <span aria-hidden="true">↗</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          {!carregando && itens.length > 0 && listaFiltrada.length === 0 && (
+            <div className="empty-state">
+              <span className="empty-icon">⌕</span>
+              <h3>Nenhum item por aqui.</h3>
+              <p>Experimente selecionar outro filtro.</p>
+            </div>
+          )}
+        </section>
+
+        <section className="gratitude">
+          <span className="gratitude-heart" aria-hidden="true">♡</span>
+          <div>
+            <h2>Obrigado por fazer parte disso.</h2>
+            <p>
+              Sua generosidade ajuda a transformar um propósito em realidade.
+              Cada contribuição importa.
+            </p>
+          </div>
+        </section>
+
+        <footer className="site-footer">
+          <a href="#inicio" className="footer-brand">✳ Lista Missionária</a>
+          <p>Feita com propósito, cuidado e muitas mãos.</p>
+          <p className="privacy-note">
+            Os nomes dos doadores não são exibidos na página pública.
           </p>
-        )}
-
-        <footer style={{
-          textAlign: 'center',
-          color: '#718075',
-          fontSize: 13,
-          lineHeight: 1.6,
-          marginTop: 32,
-        }}>
-          Obrigado por fazer parte desta missão.
-          <br />
-          Os nomes dos doadores não são exibidos nesta lista pública.
         </footer>
       </div>
     </main>
