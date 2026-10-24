@@ -21,6 +21,12 @@ export default function Home() {
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState(false);
 
+  const [pixCopiado, setPixCopiado] = useState(false);
+  const [erroPix, setErroPix] = useState('');
+
+  const chavePix = '07095146209';
+  const nomeBeneficiario = 'Vinicius Queiroz Modesto';
+
   const carregarItens = useCallback(async () => {
     try {
       const resposta = await fetch('/api/items', { cache: 'no-store' });
@@ -143,6 +149,20 @@ export default function Home() {
       await carregarItens();
     } finally {
       setEnviando(null);
+    }
+  }
+
+  async function copiarPix() {
+    setPixCopiado(false);
+    setErroPix('');
+
+    try {
+      await navigator.clipboard.writeText(chavePix);
+      setPixCopiado(true);
+    } catch {
+      setErroPix(
+        'Não foi possível copiar automaticamente. Copie a chave PIX manualmente.'
+      );
     }
   }
 
@@ -459,6 +479,57 @@ export default function Home() {
               <p>Experimente selecionar outro filtro.</p>
             </div>
           )}
+        </section>
+
+        {/* CONTRIBUIÇÃO VIA PIX */}
+        <section className="gratitude pix-section">
+          <span className="gratitude-heart" aria-hidden="true">
+            ♡
+          </span>
+
+          <div className="pix-content">
+            <span className="section-kicker">CONTRIBUA TAMBÉM</span>
+
+            <h2>Ajude via PIX.</h2>
+
+            <p>
+              Não encontrou um item para doar? Você também pode
+              contribuir financeiramente. Toda ajuda faz diferença.
+            </p>
+
+            <div className="pix-details">
+              <div className="pix-info">
+                <span>Beneficiário</span>
+                <strong>{nomeBeneficiario}</strong>
+              </div>
+
+              <div className="pix-info">
+                <span>Chave PIX CPF</span>
+                <strong className="pix-key">{chavePix}</strong>
+              </div>
+
+              <button
+                type="button"
+                className="donate-button pix-copy-button"
+                onClick={() => void copiarPix()}
+              >
+                {pixCopiado ? '✓ Chave PIX copiada!' : 'Copiar chave PIX'}
+                {!pixCopiado && <span aria-hidden="true">↗</span>}
+              </button>
+
+              {pixCopiado && (
+                <p className="pix-feedback" role="status" aria-live="polite">
+                  Chave copiada. Agora é só abrir o aplicativo do seu banco.
+                </p>
+              )}
+
+              {erroPix && (
+                <p className="pix-feedback pix-feedback-error" role="alert">
+                  {erroPix}
+                </p>
+              )}
+            </div>
+          </div>
         </section>
 
         <section className="gratitude">
