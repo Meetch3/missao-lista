@@ -499,12 +499,12 @@ export default function Home() {
 
             <div className="pix-details">
               <div className="pix-info">
-                <span>Beneficiário</span>
+                <span>Beneficiário: </span>
                 <strong>{nomeBeneficiario}</strong>
               </div>
 
               <div className="pix-info">
-                <span>Chave PIX CPF</span>
+                <span>Chave PIX CPF: </span>
                 <strong className="pix-key">{chavePix}</strong>
               </div>
 
