@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -60,9 +59,10 @@ export default function Home() {
     item => item.remaining_quantity === 0
   ).length;
 
-  const progresso = totalNecessario > 0
-    ? Math.min(100, Math.round(totalDoado / totalNecessario * 100))
-    : 0;
+  const progresso =
+    totalNecessario > 0
+      ? Math.min(100, Math.round((totalDoado / totalNecessario) * 100))
+      : 0;
 
   const categorias = [
     'Todos',
@@ -110,8 +110,8 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          itemId: item.id,
-          donorName: nome,
+          item_id: item.id,
+          donor_name: nome,
           quantity: quantidade,
         }),
       });
@@ -154,7 +154,9 @@ export default function Home() {
       <div className="mission-container">
         <header className="topbar">
           <a href="#inicio" className="brand">
-            <span className="brand-mark" aria-hidden="true">✳</span>
+            <span className="brand-mark" aria-hidden="true">
+              ✳
+            </span>
             <span>
               <strong>Lista Vinicius Modesto</strong>
               <small>Uma missão, muitas mãos</small>
@@ -237,26 +239,34 @@ export default function Home() {
             <span>
               <strong>{totalDoado}</strong> de {totalNecessario} unidades doadas
             </span>
-            <span>{Math.max(0, totalNecessario - totalDoado)} unidades restantes</span>
+            <span>
+              {Math.max(0, totalNecessario - totalDoado)} unidades restantes
+            </span>
           </div>
 
           <div className="stats-grid">
             <div className="stat-card">
-              <span className="stat-icon stat-icon-green" aria-hidden="true">▦</span>
+              <span className="stat-icon stat-icon-green" aria-hidden="true">
+                ▦
+              </span>
               <div>
                 <strong>{itens.length}</strong>
                 <span>Itens na lista</span>
               </div>
             </div>
             <div className="stat-card">
-              <span className="stat-icon stat-icon-yellow" aria-hidden="true">♡</span>
+              <span className="stat-icon stat-icon-yellow" aria-hidden="true">
+                ♡
+              </span>
               <div>
                 <strong>{totalDoado}</strong>
                 <span>Unidades doadas</span>
               </div>
             </div>
             <div className="stat-card">
-              <span className="stat-icon stat-icon-blue" aria-hidden="true">✓</span>
+              <span className="stat-icon stat-icon-blue" aria-hidden="true">
+                ✓
+              </span>
               <div>
                 <strong>{concluidos}</strong>
                 <span>Objetivos concluídos</span>
@@ -300,7 +310,9 @@ export default function Home() {
                 type="button"
                 key={categoria}
                 onClick={() => setFiltro(categoria)}
-                className={`filter-chip ${filtro === categoria ? 'filter-active' : ''}`}
+                className={`filter-chip ${
+                  filtro === categoria ? 'filter-active' : ''
+                }`}
                 aria-pressed={filtro === categoria}
               >
                 {categoria}
@@ -322,22 +334,27 @@ export default function Home() {
           ) : (
             <div className="items-grid">
               {listaFiltrada.map((item, index) => {
-                const percentual = item.required_quantity > 0
-                  ? Math.min(
-                      100,
-                      Math.round(
-                        item.donated_quantity / item.required_quantity * 100
+                const percentual =
+                  item.required_quantity > 0
+                    ? Math.min(
+                        100,
+                        Math.round(
+                          (item.donated_quantity / item.required_quantity) * 100
+                        )
                       )
-                    )
-                  : 0;
+                    : 0;
 
                 const concluido = item.remaining_quantity === 0;
 
                 return (
                   <article
                     key={item.id}
-                    className={`item-card ${concluido ? 'item-card-complete' : ''}`}
-                    style={{ animationDelay: `${Math.min(index, 8) * 55}ms` }}
+                    className={`item-card ${
+                      concluido ? 'item-card-complete' : ''
+                    }`}
+                    style={{
+                      animationDelay: `${Math.min(index, 8) * 55}ms`,
+                    }}
                   >
                     <div className="item-card-top">
                       <span className="category-label">{item.category}</span>
@@ -405,10 +422,12 @@ export default function Home() {
                             max={item.remaining_quantity}
                             step="1"
                             value={quantidades[item.id] ?? '1'}
-                            onChange={e => setQuantidades(anterior => ({
-                              ...anterior,
-                              [item.id]: e.target.value,
-                            }))}
+                            onChange={e =>
+                              setQuantidades(anterior => ({
+                                ...anterior,
+                                [item.id]: e.target.value,
+                              }))
+                            }
                           />
                         </label>
 
@@ -443,7 +462,9 @@ export default function Home() {
         </section>
 
         <section className="gratitude">
-          <span className="gratitude-heart" aria-hidden="true">♡</span>
+          <span className="gratitude-heart" aria-hidden="true">
+            ♡
+          </span>
           <div>
             <h2>Obrigado por fazer parte disso.</h2>
             <p>
@@ -454,7 +475,9 @@ export default function Home() {
         </section>
 
         <footer className="site-footer">
-          <a href="#inicio" className="footer-brand">✳ Lista Missionária</a>
+          <a href="#inicio" className="footer-brand">
+            ✳ Lista Missionária
+          </a>
           <p>Feita com propósito, cuidado e muitas mãos.</p>
           <p className="privacy-note">
             Os nomes dos doadores não são exibidos na página pública.
