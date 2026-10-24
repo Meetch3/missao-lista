@@ -156,7 +156,7 @@ export default function Home() {
           <a href="#inicio" className="brand">
             <span className="brand-mark" aria-hidden="true">✳</span>
             <span>
-              <strong>Lista Missionária</strong>
+              <strong>Lista Vinicius Modesto</strong>
               <small>Uma missão, muitas mãos</small>
             </span>
           </a>
