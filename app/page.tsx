@@ -236,7 +236,7 @@ export default function Home() {
               </div>
                 <div className="mission-name-plaque">
                   <strong className="mission-name">
-                    <span>ELDER</span>
+                    <span>ELDER </span>
                     <span>MODESTO</span>
                   </strong>
 
