@@ -24,7 +24,7 @@ export default function Home() {
   const [pixCopiado, setPixCopiado] = useState(false);
   const [erroPix, setErroPix] = useState('');
 
-  const chavePix = '07095146209';
+  const chavePix = '91999920857';
   const nomeBeneficiario = 'Vinicius Queiroz Modesto';
 
   const carregarItens = useCallback(async () => {
@@ -168,6 +168,25 @@ export default function Home() {
 
   return (
     <main className="mission-page">
+      <style jsx>{`
+        .mission-board { display:grid; grid-template-columns: 0.92fr 1.08fr; gap:20px; width:100%; padding:24px; background:linear-gradient(135deg,#b68b53,#d1ad78 42%,#a87942); border:1px solid #8b6236; box-shadow:0 18px 36px rgba(30,20,10,.22), inset 0 1px 0 rgba(255,255,255,.35); border-radius:3px; }
+        .mission-board-photo-area,.mission-board-right { min-width:0; display:flex; flex-direction:column; gap:16px; }
+        .mission-board-photo { background:#e7e1d6; padding:8px; box-shadow:0 5px 12px rgba(0,0,0,.3); aspect-ratio:3/4; }
+        .mission-board-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+        .mission-name-plaque,.mission-scripture-plaque,.mission-state-plaque { background:linear-gradient(145deg,#f4f4f1,#cfd1d2); color:#202124; padding:16px; box-shadow:0 5px 12px rgba(0,0,0,.28); border:1px solid #b7b9b9; }
+        .mission-name-plaque { text-align:center; display:flex; flex-direction:column; gap:9px; font-size:clamp(11px,1.1vw,16px); font-weight:800; letter-spacing:.04em; }
+        .mission-plaque-line { height:2px; background:#3c3c3c; }
+        .mission-scripture-plaque strong { display:block; font-size:clamp(17px,1.8vw,26px); font-weight:900; margin-bottom:9px; letter-spacing:.03em; }
+        .mission-scripture-plaque p { margin:0; font-size:clamp(12px,1.15vw,16px); line-height:1.45; font-weight:600; }
+        .mission-scripture-plaque span { display:block; margin-top:9px; font-size:11px; font-weight:800; letter-spacing:.08em; }
+        .mission-state-plaque { display:flex; align-items:center; justify-content:space-around; gap:10px; min-height:190px; flex:1; }
+        .mission-state-shape { width:46%; max-height:210px; fill:#151515; flex-shrink:0; }
+        .mission-state-star { fill:#f0f0ed; stroke:#f0f0ed; }
+        .mission-state-label { display:flex; flex-direction:column; text-align:center; gap:5px; font-weight:900; font-size:clamp(13px,1.5vw,20px); }
+        .mission-state-label small { margin-top:8px; font-size:11px; letter-spacing:.1em; }
+        @media (max-width:640px) { .mission-board { grid-template-columns:1fr; padding:14px; gap:14px; } .mission-board-photo-area { display:grid; grid-template-columns:1fr .9fr; align-items:stretch; } .mission-board-photo { aspect-ratio:3/4; } .mission-name-plaque { justify-content:center; padding:10px; font-size:11px; } .mission-state-plaque { min-height:150px; } .mission-state-shape { max-height:150px; } }
+      `}</style>
+
       <div className="ambient ambient-one" aria-hidden="true" />
       <div className="ambient ambient-two" aria-hidden="true" />
 
@@ -179,7 +198,6 @@ export default function Home() {
             </span>
             <span>
               <strong>Lista Vinicius Modesto</strong>
-              <small>Uma missão, muitas mãos</small>
             </span>
           </a>
 
@@ -192,13 +210,13 @@ export default function Home() {
           <div className="hero-copy">
             <span className="eyebrow">
               <span className="live-dot" />
-              JUNTOS POR UM PROPÓSITO
+              Colaboração missionária
             </span>
 
             <h1>
-              Pequenas atitudes.
+              MISSÃO BRASIL
               <br />
-              <span>Uma grande missão.</span>
+              <span>SÃO BERNARDO</span>
             </h1>
 
             <p>
@@ -217,18 +235,90 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-art" aria-label="Ilustração de mãos ajudando">
-            <div className="art-circle art-circle-back" />
-            <div className="art-circle art-circle-front" />
-            <div className="art-spark spark-one">✦</div>
-            <div className="art-spark spark-two">✳</div>
-            <div className="art-card">
-              <span className="art-icon">♡</span>
-              <strong>Juntos fazemos mais</strong>
-              <span>Cada gesto conta</span>
+          <div className="mission-board" aria-label="Convite missionário">
+            <div className="mission-board-photo-area">
+              <div className="mission-board-photo">
+                <img src="/foto.png" alt="Foto do missionário" />
+              </div>
+              <div className="mission-name-plaque">
+                <strong>VINICIUS QUEIROZ MODESTO</strong>
+                <span className="mission-plaque-line" />
+                <span>MISSÃO BRASIL</span>
+              </div>
             </div>
-            <div className="art-leaf leaf-one">❋</div>
-            <div className="art-leaf leaf-two">❋</div>
+
+            <div className="mission-board-right">
+              <div className="mission-scripture-plaque">
+                <strong>CONVITE MISSIONÁRIO</strong>
+                <p>
+                  Dia 20/20/2000 as 00:00
+                  Rua x numero x
+                </p>
+                <span>Espero você lá</span>
+              </div>
+
+              <div className="mission-state-plaque">
+                  <div className="mission-location">
+                  <h2>SÃO BERNARDO DO CAMPO</h2>
+                  <p>SÃO PAULO · BRASIL</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+{/* CONTRIBUIÇÃO VIA PIX */}
+        <section className="gratitude pix-section">
+          <span className="gratitude-heart" aria-hidden="true">
+            ♡
+          </span>
+
+          <div className="pix-content">
+            <span className="section-kicker">CONTRIBUA TAMBÉM</span>
+
+            <h2>Ajude via PIX.</h2>
+
+            <p>
+            Meus irmãos, marquem cada item da lista conforme forem escolhendo o que desejam contribuir.❤️ 
+            </p>
+            <p>
+            Se preferirem, vocês também podem contribuir via PIX.
+            Fiquem à vontade! Já tenho lojas onde posso comprar os itens. Sou muito grato por cada gesto de carinho e apoio. Que Deus abençoe a vida de cada um de vocês!
+            AMO VOCÊS!🫶🏽❤️🙏
+            </p>
+
+            <div className="pix-details">
+              <div className="pix-info">
+                <span>Beneficiário: </span>
+                <strong>{nomeBeneficiario}</strong>
+              </div>
+
+              <div className="pix-info">
+                <span>Chave PIX CPF: </span>
+                <strong className="pix-key">{chavePix}</strong>
+              </div>
+
+              <button
+                type="button"
+                className="donate-button pix-copy-button"
+                onClick={() => void copiarPix()}
+              >
+                {pixCopiado ? '✓ Chave PIX copiada!' : 'Copiar chave PIX'}
+                {!pixCopiado && <span aria-hidden="true">↗</span>}
+              </button>
+
+              {pixCopiado && (
+                <p className="pix-feedback" role="status" aria-live="polite">
+                  Chave copiada. Agora é só abrir o aplicativo do seu banco.
+                </p>
+              )}
+
+              {erroPix && (
+                <p className="pix-feedback pix-feedback-error" role="alert">
+                  {erroPix}
+                </p>
+              )}
+            </div>
           </div>
         </section>
 
@@ -479,57 +569,6 @@ export default function Home() {
               <p>Experimente selecionar outro filtro.</p>
             </div>
           )}
-        </section>
-
-        {/* CONTRIBUIÇÃO VIA PIX */}
-        <section className="gratitude pix-section">
-          <span className="gratitude-heart" aria-hidden="true">
-            ♡
-          </span>
-
-          <div className="pix-content">
-            <span className="section-kicker">CONTRIBUA TAMBÉM</span>
-
-            <h2>Ajude via PIX.</h2>
-
-            <p>
-              Não encontrou um item para doar? Você também pode
-              contribuir financeiramente. Toda ajuda faz diferença.
-            </p>
-
-            <div className="pix-details">
-              <div className="pix-info">
-                <span>Beneficiário: </span>
-                <strong>{nomeBeneficiario}</strong>
-              </div>
-
-              <div className="pix-info">
-                <span>Chave PIX CPF: </span>
-                <strong className="pix-key">{chavePix}</strong>
-              </div>
-
-              <button
-                type="button"
-                className="donate-button pix-copy-button"
-                onClick={() => void copiarPix()}
-              >
-                {pixCopiado ? '✓ Chave PIX copiada!' : 'Copiar chave PIX'}
-                {!pixCopiado && <span aria-hidden="true">↗</span>}
-              </button>
-
-              {pixCopiado && (
-                <p className="pix-feedback" role="status" aria-live="polite">
-                  Chave copiada. Agora é só abrir o aplicativo do seu banco.
-                </p>
-              )}
-
-              {erroPix && (
-                <p className="pix-feedback pix-feedback-error" role="alert">
-                  {erroPix}
-                </p>
-              )}
-            </div>
-          </div>
         </section>
 
         <section className="gratitude">
