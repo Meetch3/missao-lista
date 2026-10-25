@@ -219,12 +219,6 @@ export default function Home() {
               <span>SÃO BERNARDO</span>
             </h1>
 
-            <p>
-              Cada contribuição nos aproxima do nosso objetivo.
-              Veja o que precisamos, escolha como ajudar e acompanhe
-              o progresso da missão.
-            </p>
-
             <a className="primary-link" href="#itens">
               Ver itens necessários <span aria-hidden="true">↓</span>
             </a>
