@@ -242,21 +242,41 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mission-board-right">
-              <div className="mission-scripture-plaque">
-                <strong>CONVITE MISSIONÁRIO</strong>
-                <p>
-                  Tv. Das Mercês 304 
-                </p>
-                <p>
-                  Data : 05/11
-                </p>
-                <p>
-                  Horário: 18:30
-                </p>
-                <span>Espero você lá</span>
-              </div>
-            </div>
+<div className="mission-board-right">
+  <div
+    className="mission-scripture-plaque"
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      width: "100%",
+      height: "100%",
+      boxSizing: "border-box",
+    }}
+  >
+    <strong style={{ width: "100%", textAlign: "center" }}>
+      CONVITE MISSIONÁRIO
+    </strong>
+
+    <p style={{ width: "100%", textAlign: "center" }}>
+      Tv. Das Mercês 304
+    </p>
+
+    <p style={{ width: "100%", textAlign: "center" }}>
+      Data: 05/11
+    </p>
+
+    <p style={{ width: "100%", textAlign: "center" }}>
+      Horário: 18:30
+    </p>
+
+    <span style={{ width: "100%", textAlign: "center" }}>
+      Espero você lá
+    </span>
+  </div>
+</div>
           </div>
         </section>
         
