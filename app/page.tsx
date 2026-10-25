@@ -234,12 +234,16 @@ export default function Home() {
               <div className="mission-board-photo">
                 <img src="/foto.png" alt="Foto do missionário" />
               </div>
-              <div className="mission-name-plaque">
-                <strong>ELDER MODESTO</strong>
-                <span className="mission-plaque-line" />
-                <span>MISSÃO BRASIL</span>
-                <span>São bernardo</span>
-              </div>
+                <div className="mission-name-plaque">
+                  <strong className="mission-name">
+                    <span>ELDER</span>
+                    <span>MODESTO</span>
+                  </strong>
+
+                  <span className="mission-plaque-line" />
+                  <span>MISSÃO BRASIL</span>
+                  <span>São Bernardo</span>
+                </div>
             </div>
 
 <div className="mission-board-right">
