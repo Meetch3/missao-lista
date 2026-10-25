@@ -1162,6 +1162,7 @@ a {
     padding: 9px 11px;
   }
   
+  
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1172,5 +1173,54 @@ a {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* BOTÃO DE CONFIRMAÇÃO PELO WHATSAPP */
+
+.attendance-whatsapp {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 20px 0 30px;
+}
+
+.attendance-whatsapp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 16px 20px;
+  border: none;
+  border-radius: 12px;
+  background-color: #168b50;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 5px 14px rgba(22, 139, 80, 0.18);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.attendance-whatsapp-button:hover {
+  background-color: #117441;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .attendance-whatsapp {
+    margin: 16px 0 24px;
+  }
+
+  .attendance-whatsapp-button {
+    max-width: 100%;
+    padding: 15px;
+    font-size: 13px;
   }
 }

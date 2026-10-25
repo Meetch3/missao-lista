@@ -236,7 +236,7 @@ export default function Home() {
               </div>
                 <div className="mission-name-plaque">
                   <strong className="mission-name">
-                    <span>ELDER </span>
+                    <span>ELDER</span>
                     <span>MODESTO</span>
                   </strong>
 
@@ -283,7 +283,18 @@ export default function Home() {
 </div>
           </div>
         </section>
-        
+        {/* CONFIRMAR PRESENÇA PELO WHATSAPP */}
+<div className="attendance-whatsapp">
+  <a
+    href="https://wa.me/559199920857?text=Ol%C3%A1%20irei%20participar%20do%20ch%C3%A1%20mission%C3%A1rio"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="attendance-whatsapp-button"
+  >
+    <span>Clique aqui pra confirmar presença pelo WhatsApp</span>
+    <span aria-hidden="true">↗</span>
+  </a>
+</div>
 
 {/* CONTRIBUIÇÃO VIA PIX */}
         <section className="gratitude pix-section">
