@@ -235,9 +235,10 @@ export default function Home() {
                 <img src="/foto.png" alt="Foto do missionário" />
               </div>
               <div className="mission-name-plaque">
-                <strong>VINICIUS QUEIROZ MODESTO</strong>
+                <strong>ELDER MODESTO</strong>
                 <span className="mission-plaque-line" />
                 <span>MISSÃO BRASIL</span>
+                <span>São bernardo</span>
               </div>
             </div>
 
@@ -255,16 +256,10 @@ export default function Home() {
                 </p>
                 <span>Espero você lá</span>
               </div>
-
-              <div className="mission-state-plaque">
-                  <div className="mission-location">
-                  <h2>SÃO BERNARDO DO CAMPO</h2>
-                  <p>SÃO PAULO · BRASIL</p>
-                </div>
-              </div>
             </div>
           </div>
         </section>
+        
 
 {/* CONTRIBUIÇÃO VIA PIX */}
         <section className="gratitude pix-section">
@@ -293,7 +288,7 @@ export default function Home() {
               </div>
 
               <div className="pix-info">
-                <span>Chave PIX CPF: </span>
+                <span>Chave PIX Celular: </span>
                 <strong className="pix-key">{chavePix}</strong>
               </div>
 
