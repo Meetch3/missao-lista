@@ -245,8 +245,13 @@ export default function Home() {
               <div className="mission-scripture-plaque">
                 <strong>CONVITE MISSIONÁRIO</strong>
                 <p>
-                  Dia 20/20/2000 as 00:00
-                  Rua x numero x
+                  Tv. Das Mercês 304 
+                </p>
+                <p>
+                  Data : 05/11
+                </p>
+                <p>
+                  Horário: 18:30
                 </p>
                 <span>Espero você lá</span>
               </div>
