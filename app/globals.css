@@ -1161,19 +1161,7 @@ a {
   .filter-chip {
     padding: 9px 11px;
   }
-  .mission-flag {
-  display: block;
-  width: 64px;
-  height: auto;
-  margin: 8px auto;
-  object-fit: contain;
-}
-.mission-flag {
-  display: block;
-  width: 64px;
-  height: auto;
-  margin: 8px auto;
-}
+  
 }
 
 @media (prefers-reduced-motion: reduce) {

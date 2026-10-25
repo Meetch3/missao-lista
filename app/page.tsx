@@ -11,11 +11,6 @@ type Item = {
   remaining_quantity: number;
 };
 
-<img
-  src="/bandeira-brasil.svg"
-  alt="Bandeira do Brasil"
-  className="mission-flag"
-/>
 export default function Home() {
   const [itens, setItens] = useState<Item[]>([]);
   const [filtro, setFiltro] = useState('Todos');
@@ -239,22 +234,16 @@ export default function Home() {
               <div className="mission-board-photo">
                 <img src="/foto.png" alt="Foto do missionário" />
               </div>
-<div className="mission-name-plaque">
-  <strong className="mission-name">
-    <span>ELDER</span>
-    <span>MODESTO</span>
-  </strong>
+                <div className="mission-name-plaque">
+                  <strong className="mission-name">
+                    <span>ELDER </span>
+                    <span>MODESTO</span>
+                  </strong>
 
-  <img
-    src="/bandeira-brasil.svg"
-    alt="Bandeira do Brasil"
-    className="mission-flag"
-  />
-
-  <span className="mission-plaque-line" />
-  <span>MISSÃO BRASIL</span>
-  <span>SÃO BERNADO</span>
-</div>
+                  <span className="mission-plaque-line" />
+                  <span>MISSÃO BRASIL</span>
+                  <span>SÃO BERNARDO</span>
+                </div>
             </div>
 
 <div className="mission-board-right">
