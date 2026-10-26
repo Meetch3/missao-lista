@@ -433,15 +433,7 @@ export default function Home() {
     </span>
   )}
 
-  <a
-    href="https://wa.me/559199920857?text=Ol%C3%A1%20irei%20participar%20do%20ch%C3%A1%20mission%C3%A1rio"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="attendance-whatsapp-button"
-  >
-    <span>Clique aqui pra confirmar presença pelo WhatsApp</span>
-    <span aria-hidden="true">↗</span>
-  </a>
+
 
   <div className="event-links">
     <a href={MAPS_URL} target="_blank" rel="noopener noreferrer">
