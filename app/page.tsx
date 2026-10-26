@@ -367,11 +367,6 @@ export default function Home() {
             <a className="primary-link" href="#itens">
               Ver itens necessários <span aria-hidden="true">↓</span>
             </a>
-
-            <div className="hero-note">
-              <span aria-hidden="true">♡</span>
-              Toda contribuição faz diferença.
-            </div>
           </div>
 
           <div className="mission-board" aria-label="Convite missionário">
@@ -465,6 +460,9 @@ export default function Home() {
             Se preferirem, vocês também podem contribuir via PIX.
             Fiquem à vontade! Já tenho lojas onde posso comprar os itens. Sou muito grato por cada gesto de carinho e apoio. Que Deus abençoe a vida de cada um de vocês!
             AMO VOCÊS!🫶🏽❤️🙏
+            </p>
+            <p>
+              <br />
             </p>
 
             <div className="pix-details">
