@@ -457,13 +457,7 @@ export default function Home() {
           </span>
 
           <div className="pix-content">
-            <span className="section-kicker">CONTRIBUA TAMBÉM</span>
-
-            <h2>Ajude via PIX.</h2>
-
-            <p>
-            Meus irmãos, marquem cada item da lista conforme forem escolhendo o que desejam contribuir.❤️ 
-            </p>
+            <span className="section-kicker">CONTRIBUA TAMBÉM POR PIX</span>
             <p>
             Se preferirem, vocês também podem contribuir via PIX.
             Fiquem à vontade! Já tenho lojas onde posso comprar os itens. Sou muito grato por cada gesto de carinho e apoio. Que Deus abençoe a vida de cada um de vocês!
