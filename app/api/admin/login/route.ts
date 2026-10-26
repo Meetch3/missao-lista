@@ -1,10 +1,15 @@
-﻿
+
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import {
   ADMIN_COOKIE,
   createAdminToken,
 } from '@/lib/admin-auth';
+import {
+  getClientIp,
+  isRateLimited,
+  isSameOrigin,
+} from '@/lib/request-guard';
 
 function sameSecret(a: string, b: string) {
   const hashA = createHash('sha256').update(a).digest();
@@ -18,29 +23,23 @@ export async function POST(request: Request) {
 
   if (!expectedPassword) {
     return NextResponse.json(
-      { error: 'Senha administrativa nÃ£o configurada.' },
+      { error: 'Senha administrativa não configurada.' },
       { status: 500 }
     );
   }
 
-  // Aceita somente requisiÃ§Ãµes originadas no mesmo site.
-  const origin = request.headers.get('origin');
-  const host = request.headers.get('host');
+  if (!isSameOrigin(request)) {
+    return NextResponse.json(
+      { error: 'Origem não permitida.' },
+      { status: 403 }
+    );
+  }
 
-  if (origin && host) {
-    try {
-      if (new URL(origin).host !== host) {
-        return NextResponse.json(
-          { error: 'Origem nÃ£o permitida.' },
-          { status: 403 }
-        );
-      }
-    } catch {
-      return NextResponse.json(
-        { error: 'Origem invÃ¡lida.' },
-        { status: 403 }
-      );
-    }
+  if (isRateLimited(`login:${getClientIp(request)}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Muitas tentativas. Aguarde alguns minutos.' },
+      { status: 429 }
+    );
   }
 
   let body: { password?: unknown };
@@ -49,7 +48,7 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: 'RequisiÃ§Ã£o invÃ¡lida.' },
+      { error: 'Requisição inválida.' },
       { status: 400 }
     );
   }

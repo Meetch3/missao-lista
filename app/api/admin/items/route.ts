@@ -1,4 +1,4 @@
-﻿
+
 import { NextResponse } from 'next/server';
 import { isAdminAuthenticated } from '@/lib/admin-auth';
 import { supabaseAdmin } from '@/lib/supabase-admin';
@@ -17,7 +17,7 @@ function validQuantity(value: unknown): value is number {
 
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'NÃ£o autorizado.' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
   let body: { name?: unknown; category?: unknown; quantity?: unknown };
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Dados invÃ¡lidos.' }, { status: 400 });
+    return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
   }
 
   if (
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     !validQuantity(body.quantity)
   ) {
     return NextResponse.json(
-      { error: 'Informe nome, categoria vÃ¡lida e quantidade maior que zero.' },
+      { error: 'Informe nome, categoria válida e quantidade maior que zero.' },
       { status: 400 }
     );
   }
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   if (error) {
     console.error('Erro ao criar item:', error.message);
     return NextResponse.json(
-      { error: 'NÃ£o foi possÃ­vel cadastrar o item.' },
+      { error: 'Não foi possível cadastrar o item.' },
       { status: 500 }
     );
   }
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'NÃ£o autorizado.' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
   let body: {
@@ -76,7 +76,7 @@ export async function PATCH(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Dados invÃ¡lidos.' }, { status: 400 });
+    return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
   }
 
   if (
@@ -107,13 +107,13 @@ export async function PATCH(request: Request) {
   if (error) {
     console.error('Erro ao atualizar item:', error.message);
     return NextResponse.json(
-      { error: 'NÃ£o foi possÃ­vel atualizar o item.' },
+      { error: 'Não foi possível atualizar o item.' },
       { status: 500 }
     );
   }
 
   if (!data) {
-    return NextResponse.json({ error: 'Item nÃ£o encontrado.' }, { status: 404 });
+    return NextResponse.json({ error: 'Item não encontrado.' }, { status: 404 });
   }
 
   return NextResponse.json(data);
@@ -121,7 +121,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'NÃ£o autorizado.' }, { status: 401 });
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
 
   let body: { id?: unknown };
@@ -129,11 +129,11 @@ export async function DELETE(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Dados invÃ¡lidos.' }, { status: 400 });
+    return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
   }
 
   if (!Number.isSafeInteger(body.id) || (body.id as number) < 1) {
-    return NextResponse.json({ error: 'ID invÃ¡lido.' }, { status: 400 });
+    return NextResponse.json({ error: 'ID inválido.' }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin
@@ -146,13 +146,13 @@ export async function DELETE(request: Request) {
   if (error) {
     console.error('Erro ao excluir item:', error.message);
     return NextResponse.json(
-      { error: 'NÃ£o foi possÃ­vel excluir o item.' },
+      { error: 'Não foi possível excluir o item.' },
       { status: 500 }
     );
   }
 
   if (!data) {
-    return NextResponse.json({ error: 'Item nÃ£o encontrado.' }, { status: 404 });
+    return NextResponse.json({ error: 'Item não encontrado.' }, { status: 404 });
   }
 
   return NextResponse.json({ success: true });

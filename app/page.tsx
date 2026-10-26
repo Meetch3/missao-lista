@@ -94,6 +94,7 @@ export default function Home() {
     if (nome.length < 2 || nome.length > 100) {
       setErro(true);
       setMensagem('Informe seu nome, com pelo menos 2 caracteres.');
+      document.getElementById('nome-doador')?.focus();
       return;
     }
 
@@ -134,7 +135,6 @@ export default function Home() {
         `Sua contribuição de ${quantidade} unidade(s) de "${item.name}" foi registrada. Muito obrigado!`
       );
       setErro(false);
-      setNomeDoador('');
       setQuantidades(anterior => ({
         ...anterior,
         [item.id]: '1',
@@ -459,6 +459,20 @@ export default function Home() {
             ))}
           </div>
 
+          <div className="donation-form donor-name-box">
+            <label htmlFor="nome-doador">
+              <span>Seu nome (vale para todos os itens que você escolher)</span>
+              <input
+                id="nome-doador"
+                value={nomeDoador}
+                onChange={e => setNomeDoador(e.target.value)}
+                placeholder="Como podemos te chamar?"
+                maxLength={100}
+                autoComplete="name"
+              />
+            </label>
+          </div>
+
           {carregando ? (
             <div className="empty-state">
               <span className="loading-spinner" />
@@ -542,17 +556,6 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="donation-form">
-                        <label>
-                          <span>Seu nome</span>
-                          <input
-                            value={nomeDoador}
-                            onChange={e => setNomeDoador(e.target.value)}
-                            placeholder="Como podemos te chamar?"
-                            maxLength={100}
-                            autoComplete="name"
-                          />
-                        </label>
-
                         <label>
                           <span>Quantidade para doar</span>
                           <input

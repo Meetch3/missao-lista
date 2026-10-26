@@ -1,5 +1,10 @@
 ﻿
 import { NextResponse } from 'next/server';
+import {
+  getClientIp,
+  isRateLimited,
+  isSameOrigin,
+} from '@/lib/request-guard';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 type DadosDoacao = {
@@ -10,6 +15,23 @@ type DadosDoacao = {
 
 export async function POST(request: Request) {
   try {
+    if (!isSameOrigin(request)) {
+      return NextResponse.json(
+        { error: 'Origem não permitida.' },
+        { status: 403 }
+      );
+    }
+
+    if (isRateLimited(`doacao:${getClientIp(request)}`, 5, 10 * 60 * 1000)) {
+      return NextResponse.json(
+        {
+          error:
+            'Muitas doações em pouco tempo. Aguarde alguns minutos e tente novamente.',
+        },
+        { status: 429 }
+      );
+    }
+
     let body: DadosDoacao;
 
     try {
@@ -33,9 +55,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!nomeDoador || nomeDoador.length > 120) {
+    if (nomeDoador.length < 2 || nomeDoador.length > 100) {
       return NextResponse.json(
-        { error: 'Informe um nome válido, com até 120 caracteres.' },
+        { error: 'Informe um nome válido, entre 2 e 100 caracteres.' },
         { status: 400 }
       );
     }

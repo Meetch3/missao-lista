@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { supabasePublic } from '@/lib/supabase-public';
 
 
@@ -11,7 +11,7 @@ export async function GET() {
   if (error) {
     console.error('Erro ao carregar itens:', error.message);
     return NextResponse.json(
-      { error: 'NÃ£o foi possÃ­vel carregar a lista.' },
+      { error: 'Não foi possível carregar a lista.' },
       { status: 500 }
     );
   }
