@@ -902,6 +902,39 @@ a {
   line-height: 1.6;
 }
 
+.contribution-whatsapp {
+  display: grid;
+  gap: 12px;
+  color: #3d4f43;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.contribution-whatsapp > p:not(.contribution-done) {
+  margin: 0;
+}
+
+.whatsapp-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 15px;
+  border: 1px solid #dce8d5;
+  border-radius: 12px;
+  background: white;
+  color: var(--green-dark);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.whatsapp-choice-yes {
+  border-color: #168b50;
+  background: #168b50;
+  color: white;
+}
+
 .notice-toast {
   position: fixed;
   right: 16px;

@@ -35,6 +35,21 @@ function nomeSemPix(nome: string) {
   return nome.replace(MARCA_PIX, ' ').replace(/[\s,]+$/, '').trim();
 }
 
+const WHATSAPP_ELDER = '559199920857';
+
+function linkWhatsapp(
+  doacao: { nome: string; descricao: string },
+  vaiAoCha: boolean
+) {
+  const texto =
+    `Olá! Aqui é ${doacao.nome}. Venho dizer que doei ${doacao.descricao}` +
+    (vaiAoCha
+      ? ', e estarei presente no chá missionário! 🙏'
+      : ', mas infelizmente não poderei ir ao chá. 🙏');
+
+  return `https://wa.me/${WHATSAPP_ELDER}?text=${encodeURIComponent(texto)}`;
+}
+
 function assinarMinuto(aoMudar: () => void) {
   const timer = setInterval(aoMudar, 60_000);
   return () => clearInterval(timer);
@@ -106,10 +121,13 @@ export default function Home() {
     null
   );
   const [erroModal, setErroModal] = useState('');
+  const [doacaoConfirmada, setDoacaoConfirmada] = useState<{
+    nome: string;
+    descricao: string;
+  } | null>(null);
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const nomeInputRef = useRef<HTMLInputElement>(null);
-  const timerMensagem = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const [pixCopiado, setPixCopiado] = useState(false);
   const [erroPix, setErroPix] = useState('');
@@ -195,19 +213,10 @@ export default function Home() {
     }
   }, [itemSelecionadoId]);
 
-  function mostrarMensagem(texto: string, comErro: boolean) {
-    clearTimeout(timerMensagem.current);
-    setErro(comErro);
-    setMensagem(texto);
-
-    if (!comErro) {
-      timerMensagem.current = setTimeout(() => setMensagem(''), 7000);
-    }
-  }
-
   function abrirContribuicao(item: Item) {
     setQuantidade(1);
     setErroModal('');
+    setDoacaoConfirmada(null);
     setPixCopiado(false);
     setErroPix('');
     if (!nomeDoador) setNomeDoador(lerNomeSalvo());
@@ -269,11 +278,13 @@ export default function Home() {
       }
 
       salvarNome(nome);
-      fecharContribuicao();
-      mostrarMensagem(
-        `Sua contribuição de ${quantidade} unidade(s) de "${nomeSemPix(item.name)}" foi registrada. Muito obrigado!`,
-        false
-      );
+      setDoacaoConfirmada({
+        nome,
+        descricao:
+          `${quantidade} ${quantidade === 1 ? 'unidade' : 'unidades'} de ` +
+          nomeSemPix(item.name) +
+          (tipoPix(item.name) ? ' (via PIX)' : ''),
+      });
 
       await carregarItens();
     } catch (e) {
@@ -731,7 +742,10 @@ export default function Home() {
         ref={dialogRef}
         className="contribution-dialog"
         aria-labelledby="contribuicao-titulo"
-        onClose={() => setItemSelecionadoId(null)}
+        onClose={() => {
+          setItemSelecionadoId(null);
+          setDoacaoConfirmada(null);
+        }}
         onCancel={e => {
           if (enviando) e.preventDefault();
         }}
@@ -768,7 +782,36 @@ export default function Home() {
               </button>
             </div>
 
-            {itemSelecionado.remaining_quantity === 0 ? (
+            {doacaoConfirmada ? (
+              <div className="contribution-whatsapp">
+                <p className="contribution-done">
+                  ✓ Contribuição registrada! Muito obrigado,{' '}
+                  {doacaoConfirmada.nome}.
+                </p>
+                <p>
+                  Pra finalizar, avise o Elder pelo WhatsApp:{' '}
+                  <strong>você vai ao chá missionário?</strong>
+                </p>
+                <a
+                  className="whatsapp-choice whatsapp-choice-yes"
+                  href={linkWhatsapp(doacaoConfirmada, true)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={fecharContribuicao}
+                >
+                  Sim, estarei presente
+                </a>
+                <a
+                  className="whatsapp-choice"
+                  href={linkWhatsapp(doacaoConfirmada, false)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={fecharContribuicao}
+                >
+                  Não poderei ir
+                </a>
+              </div>
+            ) : itemSelecionado.remaining_quantity === 0 ? (
               <p className="contribution-done">
                 ✓ Este item acabou de ser completado. Obrigado mesmo assim!
               </p>
