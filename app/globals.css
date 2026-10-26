@@ -7,7 +7,7 @@
   --green: #286744;
   --green-dark: #194b32;
   --green-light: #e8f0e5;
-  --muted: #718075;
+  --muted: #00ff44;
   --border: #e4e9df;
   --white: #ffffff;
 }
@@ -247,7 +247,7 @@ a {
   align-items: center;
   gap: 8px;
   margin-top: 19px;
-  color: #718075;
+  color: #00fc43;
   font-size: 12px;
 }
 
@@ -659,7 +659,7 @@ a {
 }
 
 .item-row-progress strong {
-  color: #8c7133;
+  color: #ff0000;
 }
 
 .item-row-tags {
