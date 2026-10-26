@@ -1,8 +1,72 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 const CHAVE_NOME_SALVO = 'missao-nome-doador';
+
+const ENDERECO = 'Tv. das Mercês, 304 - Belém, PA';
+const DATA_EVENTO = '2026-11-05';
+const FIM_EVENTO = Date.parse('2026-11-05T21:30:00-03:00');
+const MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ENDERECO)}`;
+const WAZE_URL = `https://waze.com/ul?q=${encodeURIComponent(ENDERECO)}&navigate=yes`;
+const AGENDA_URL =
+  'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+  `&text=${encodeURIComponent('Chá missionário do Elder Modesto')}` +
+  '&dates=20261105T213000Z/20261106T003000Z' +
+  `&location=${encodeURIComponent(ENDERECO)}`;
+
+// "(PIX)" ou "(SE POSSÍVEL PIX)" no nome indica que o item é melhor via PIX.
+const MARCA_PIX = /\s*\((SE POSS[IÍ]VEL\s+)?PIX\)\s*/i;
+
+function tipoPix(nome: string) {
+  const marca = nome.match(MARCA_PIX);
+  if (!marca) return null;
+  return marca[1] ? 'preferencia' : 'somente';
+}
+
+function nomeSemPix(nome: string) {
+  return nome.replace(MARCA_PIX, ' ').replace(/[\s,]+$/, '').trim();
+}
+
+function assinarMinuto(aoMudar: () => void) {
+  const timer = setInterval(aoMudar, 60_000);
+  return () => clearInterval(timer);
+}
+
+function minutoAtual() {
+  return Math.floor(Date.now() / 60_000);
+}
+
+function textoContagem(minuto: number) {
+  const agora = minuto * 60_000;
+  if (agora > FIM_EVENTO) return null;
+
+  const hoje = new Date(agora).toLocaleDateString('en-CA', {
+    timeZone: 'America/Belem',
+  });
+  const dias = Math.round(
+    (Date.parse(DATA_EVENTO) - Date.parse(hoje)) / 86_400_000
+  );
+
+  if (dias <= 0) return 'É hoje, às 18:30!';
+  if (dias === 1) return 'É amanhã, às 18:30!';
+  return `Faltam ${dias} dias`;
+}
+
+function abrirAgenda(evento: React.MouseEvent<HTMLAnchorElement>) {
+  // iPhone e Mac abrem melhor o arquivo .ics no calendário do próprio aparelho.
+  if (/iPhone|iPad|Macintosh/.test(navigator.userAgent)) {
+    evento.preventDefault();
+    window.open('/cha-missionario.ics', '_self');
+  }
+}
 
 function lerNomeSalvo() {
   try {
@@ -52,6 +116,10 @@ export default function Home() {
 
   const chavePix = '91999920857';
   const nomeBeneficiario = 'Vinicius Queiroz Modesto';
+
+  // No servidor não há "agora": a contagem só aparece no navegador.
+  const minuto = useSyncExternalStore(assinarMinuto, minutoAtual, () => null);
+  const contagem = minuto === null ? null : textoContagem(minuto);
 
   const carregarItens = useCallback(async () => {
     try {
@@ -140,6 +208,8 @@ export default function Home() {
   function abrirContribuicao(item: Item) {
     setQuantidade(1);
     setErroModal('');
+    setPixCopiado(false);
+    setErroPix('');
     if (!nomeDoador) setNomeDoador(lerNomeSalvo());
     setItemSelecionadoId(item.id);
   }
@@ -201,7 +271,7 @@ export default function Home() {
       salvarNome(nome);
       fecharContribuicao();
       mostrarMensagem(
-        `Sua contribuição de ${quantidade} unidade(s) de "${item.name}" foi registrada. Muito obrigado!`,
+        `Sua contribuição de ${quantidade} unidade(s) de "${nomeSemPix(item.name)}" foi registrada. Muito obrigado!`,
         false
       );
 
@@ -239,7 +309,7 @@ export default function Home() {
         .mission-board-photo img { width:100%; height:100%; object-fit:cover; display:block; }
         .mission-name-plaque,.mission-scripture-plaque,.mission-state-plaque { background:linear-gradient(145deg,#f4f4f1,#cfd1d2); color:#202124; padding:16px; box-shadow:0 5px 12px rgba(0,0,0,.28); border:1px solid #b7b9b9; }
         .mission-name-plaque { text-align:center; display:flex; flex-direction:column; gap:9px; font-size:clamp(11px,1.1vw,16px); font-weight:800; letter-spacing:.04em; }
-        .mission-plaque-line { height:2px; background:#3c3c3c; }
+       
         .mission-scripture-plaque strong { display:block; font-size:clamp(17px,1.8vw,26px); font-weight:900; margin-bottom:9px; letter-spacing:.03em; }
         .mission-scripture-plaque p { margin:0; font-size:clamp(12px,1.15vw,16px); line-height:1.45; font-weight:600; }
         .mission-scripture-plaque span { display:block; margin-top:9px; font-size:11px; font-weight:800; letter-spacing:.08em; }
@@ -303,10 +373,6 @@ export default function Home() {
                     <span>ELDER</span>
                     <span>MODESTO</span>
                   </strong>
-
-                  <span className="mission-plaque-line" />
-                  <span>MISSÃO BRASIL</span>
-                  <span>SÃO BERNARDO</span>
                 </div>
             </div>
 
@@ -349,6 +415,13 @@ export default function Home() {
         </section>
         {/* CONFIRMAR PRESENÇA PELO WHATSAPP */}
 <div className="attendance-whatsapp">
+  {contagem && (
+    <span className="event-countdown">
+      <span className="live-dot" />
+      {contagem}
+    </span>
+  )}
+
   <a
     href="https://wa.me/559199920857?text=Ol%C3%A1%20irei%20participar%20do%20ch%C3%A1%20mission%C3%A1rio"
     target="_blank"
@@ -358,10 +431,27 @@ export default function Home() {
     <span>Clique aqui pra confirmar presença pelo WhatsApp</span>
     <span aria-hidden="true">↗</span>
   </a>
+
+  <div className="event-links">
+    <a href={MAPS_URL} target="_blank" rel="noopener noreferrer">
+      <span aria-hidden="true">📍</span> Google Maps
+    </a>
+    <a href={WAZE_URL} target="_blank" rel="noopener noreferrer">
+      <span aria-hidden="true">🚗</span> Waze
+    </a>
+    <a
+      href={AGENDA_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={abrirAgenda}
+    >
+      <span aria-hidden="true">📅</span> Salvar na agenda
+    </a>
+  </div>
 </div>
 
 {/* CONTRIBUIÇÃO VIA PIX */}
-        <section className="gratitude pix-section">
+        <section className="gratitude pix-section" id="pix">
           <span className="gratitude-heart" aria-hidden="true">
             ♡
           </span>
@@ -550,6 +640,7 @@ export default function Home() {
                     : 0;
 
                 const concluido = item.remaining_quantity === 0;
+                const pix = tipoPix(item.name);
 
                 return (
                   <li
@@ -557,8 +648,15 @@ export default function Home() {
                     className={`item-row ${concluido ? 'item-row-complete' : ''}`}
                   >
                     <div className="item-row-info">
-                      <span className="category-label">{item.category}</span>
-                      <h3>{item.name}</h3>
+                      <div className="item-row-tags">
+                        <span className="category-label">{item.category}</span>
+                        {pix && (
+                          <span className="pix-badge">
+                            {pix === 'somente' ? 'Via PIX' : 'PIX, se possível'}
+                          </span>
+                        )}
+                      </div>
+                      <h3>{nomeSemPix(item.name)}</h3>
 
                       <div className="item-row-progress">
                         <div
@@ -661,7 +759,9 @@ export default function Home() {
                 <span className="category-label">
                   {itemSelecionado.category}
                 </span>
-                <h3 id="contribuicao-titulo">{itemSelecionado.name}</h3>
+                <h3 id="contribuicao-titulo">
+                  {nomeSemPix(itemSelecionado.name)}
+                </h3>
               </div>
               <button
                 type="button"
@@ -680,6 +780,28 @@ export default function Home() {
               </p>
             ) : (
               <>
+                {tipoPix(itemSelecionado.name) && (
+                  <div className="contribution-pix">
+                    <p>
+                      {tipoPix(itemSelecionado.name) === 'somente'
+                        ? 'Este item é melhor via PIX: o Elder já tem lojas onde comprar.'
+                        : 'Se puder, prefira contribuir com este item via PIX.'}{' '}
+                      Faça o PIX e depois confirme aqui embaixo pra marcar na
+                      lista.
+                    </p>
+                    <div className="contribution-pix-key">
+                      <span>
+                        Chave (celular): <strong>{chavePix}</strong>
+                        <small>{nomeBeneficiario}</small>
+                      </span>
+                      <button type="button" onClick={() => void copiarPix()}>
+                        {pixCopiado ? '✓ Copiada' : 'Copiar'}
+                      </button>
+                    </div>
+                    {erroPix && <small role="alert">{erroPix}</small>}
+                  </div>
+                )}
+
                 <div className="contribution-field">
                   <span>
                     Quantidade{' '}

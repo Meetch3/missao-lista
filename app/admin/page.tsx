@@ -222,6 +222,40 @@ export default function AdminPage() {
     }
   }
 
+  async function desfazerDoacao(doacao: Donation) {
+    if (
+      !window.confirm(
+        `Desfazer a doação de ${doacao.quantity} unidade(s) de "${doacao.item_name}" feita por ${doacao.donor_name}? O item volta a aparecer como pendente na lista.`
+      )
+    ) {
+      return;
+    }
+
+    setCarregando(true);
+    setMensagem('');
+
+    try {
+      const resposta = await fetch('/api/admin/donation', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: doacao.id }),
+      });
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        setMensagem(dados.error || 'Não foi possível desfazer a doação.');
+        return;
+      }
+
+      await carregarDoacoes();
+      setMensagem('Doação desfeita.');
+    } catch {
+      setMensagem('Erro de conexão ao desfazer a doação.');
+    } finally {
+      setCarregando(false);
+    }
+  }
+
   async function sair() {
     try {
       await fetch('/api/admin/logout', { method: 'POST' });
@@ -538,6 +572,7 @@ export default function AdminPage() {
                       <th style={estilos.celulaCabecalho}>Item</th>
                       <th style={estilos.celulaCabecalho}>Quantidade</th>
                       <th style={estilos.celulaCabecalho}>Data</th>
+                      <th style={estilos.celulaCabecalho}>Ações</th>
                     </tr>
                   </thead>
 
@@ -554,6 +589,16 @@ export default function AdminPage() {
                             dateStyle: 'short',
                             timeStyle: 'short',
                           })}
+                        </td>
+                        <td style={estilos.celula}>
+                          <button
+                            type="button"
+                            style={estilos.botaoExcluir}
+                            disabled={carregando}
+                            onClick={() => void desfazerDoacao(doacao)}
+                          >
+                            Desfazer
+                          </button>
                         </td>
                       </tr>
                     ))}

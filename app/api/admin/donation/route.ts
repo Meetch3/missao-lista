@@ -79,3 +79,45 @@ export async function GET() {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  if (!(await isAdminAuthenticated())) {
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+  }
+
+  let body: { id?: unknown };
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
+  }
+
+  if (!Number.isSafeInteger(body.id) || (body.id as number) < 1) {
+    return NextResponse.json({ error: 'ID inválido.' }, { status: 400 });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('donations')
+    .delete()
+    .eq('id', body.id as number)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    console.error('Erro ao excluir doação:', error.message);
+    return NextResponse.json(
+      { error: 'Não foi possível desfazer a doação.' },
+      { status: 500 }
+    );
+  }
+
+  if (!data) {
+    return NextResponse.json(
+      { error: 'Doação não encontrada.' },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({ success: true });
+}

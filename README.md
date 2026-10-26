@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lista Missionária — Elder Modesto
 
-## Getting Started
+Site do chá missionário: convite, lista de itens com progresso das doações,
+contribuição via PIX e painel administrativo.
 
-First, run the development server:
+Feito com Next.js 16, React 19 e Supabase.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Rodando localmente
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Instale as dependências:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Crie o arquivo `.env.local` na raiz com:
 
-## Learn More
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=            # URL do projeto no Supabase
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=# chave pública (publishable)
+   SUPABASE_SECRET_KEY=                 # chave secreta (só no servidor)
+   ADMIN_PASSWORD=                      # senha do painel /admin
+   ADMIN_SESSION_SECRET=                # texto aleatório com 32+ caracteres
+   NEXT_PUBLIC_SITE_URL=                # opcional: endereço do site, para o preview no WhatsApp
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. Suba o servidor e abra http://localhost:3000:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estrutura
 
-## Deploy on Vercel
+- `app/page.tsx` — página pública (convite, PIX, lista de itens)
+- `app/admin/page.tsx` — painel: cadastrar/editar itens e ver/desfazer doações
+- `app/api/` — rotas da API (itens, doações, login do admin)
+- `lib/` — clientes do Supabase, sessão do admin e limite de requisições
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Banco de dados (Supabase)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `items` — itens da lista (`name`, `category`, `quantity`)
+- `donations` — doações registradas (`item_id`, `donor_name`, `quantity`)
+- `item_progress` — view com o total doado e o que falta de cada item
+- `register_donation` — função usada para registrar uma doação
+
+Itens com `(PIX)` ou `(SE POSSÍVEL PIX)` no nome aparecem com o selo de PIX
+na lista e mostram a chave na hora de contribuir.
