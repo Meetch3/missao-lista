@@ -1,6 +1,24 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+const CHAVE_NOME_SALVO = 'missao-nome-doador';
+
+function lerNomeSalvo() {
+  try {
+    return localStorage.getItem(CHAVE_NOME_SALVO) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function salvarNome(nome: string) {
+  try {
+    localStorage.setItem(CHAVE_NOME_SALVO, nome);
+  } catch {
+    // Sem armazenamento local: a pessoa só digita o nome de novo.
+  }
+}
 
 type Item = {
   id: number;
@@ -15,11 +33,19 @@ export default function Home() {
   const [itens, setItens] = useState<Item[]>([]);
   const [filtro, setFiltro] = useState('Todos');
   const [nomeDoador, setNomeDoador] = useState('');
-  const [quantidades, setQuantidades] = useState<Record<number, string>>({});
+  const [quantidade, setQuantidade] = useState(1);
   const [carregando, setCarregando] = useState(true);
-  const [enviando, setEnviando] = useState<number | null>(null);
+  const [enviando, setEnviando] = useState(false);
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState(false);
+  const [itemSelecionadoId, setItemSelecionadoId] = useState<number | null>(
+    null
+  );
+  const [erroModal, setErroModal] = useState('');
+
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const nomeInputRef = useRef<HTMLInputElement>(null);
+  const timerMensagem = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const [pixCopiado, setPixCopiado] = useState(false);
   const [erroPix, setErroPix] = useState('');
@@ -77,40 +103,81 @@ export default function Home() {
     ...new Set(itens.map(item => item.category)),
   ];
 
-  const listaFiltrada = itens.filter(item => {
-    if (filtro === 'Pendentes') return item.remaining_quantity > 0;
-    if (filtro === 'Concluídos') return item.remaining_quantity === 0;
-    if (filtro !== 'Todos') return item.category === filtro;
-    return true;
-  });
+  // Itens pendentes primeiro; concluídos vão para o fim da lista.
+  const listaFiltrada = itens
+    .filter(item => {
+      if (filtro === 'Pendentes') return item.remaining_quantity > 0;
+      if (filtro === 'Concluídos') return item.remaining_quantity === 0;
+      if (filtro !== 'Todos') return item.category === filtro;
+      return true;
+    })
+    .sort(
+      (a, b) =>
+        Number(a.remaining_quantity === 0) - Number(b.remaining_quantity === 0)
+    );
 
-  async function registrarDoacao(item: Item) {
-    setMensagem('');
-    setErro(false);
+  const itemSelecionado =
+    itens.find(item => item.id === itemSelecionadoId) ?? null;
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+
+    if (itemSelecionadoId !== null && dialog && !dialog.open) {
+      dialog.showModal();
+    }
+  }, [itemSelecionadoId]);
+
+  function mostrarMensagem(texto: string, comErro: boolean) {
+    clearTimeout(timerMensagem.current);
+    setErro(comErro);
+    setMensagem(texto);
+
+    if (!comErro) {
+      timerMensagem.current = setTimeout(() => setMensagem(''), 7000);
+    }
+  }
+
+  function abrirContribuicao(item: Item) {
+    setQuantidade(1);
+    setErroModal('');
+    if (!nomeDoador) setNomeDoador(lerNomeSalvo());
+    setItemSelecionadoId(item.id);
+  }
+
+  function fecharContribuicao() {
+    dialogRef.current?.close();
+  }
+
+  function alterarQuantidade(delta: number) {
+    if (!itemSelecionado) return;
+
+    setQuantidade(atual =>
+      Math.min(itemSelecionado.remaining_quantity, Math.max(1, atual + delta))
+    );
+  }
+
+  async function registrarDoacao() {
+    const item = itemSelecionado;
+    if (!item) return;
+
+    setErroModal('');
 
     const nome = nomeDoador.trim();
-    const quantidade = Number(quantidades[item.id] ?? '1');
 
     if (nome.length < 2 || nome.length > 100) {
-      setErro(true);
-      setMensagem('Informe seu nome, com pelo menos 2 caracteres.');
-      document.getElementById('nome-doador')?.focus();
+      setErroModal('Informe seu nome, com pelo menos 2 caracteres.');
+      nomeInputRef.current?.focus();
       return;
     }
 
-    if (
-      !Number.isSafeInteger(quantidade) ||
-      quantidade < 1 ||
-      quantidade > item.remaining_quantity
-    ) {
-      setErro(true);
-      setMensagem(
-        `Informe uma quantidade entre 1 e ${item.remaining_quantity}.`
+    if (quantidade < 1 || quantidade > item.remaining_quantity) {
+      setErroModal(
+        `Escolha uma quantidade entre 1 e ${item.remaining_quantity}.`
       );
       return;
     }
 
-    setEnviando(item.id);
+    setEnviando(true);
 
     try {
       const resposta = await fetch('/api/donation', {
@@ -131,24 +198,21 @@ export default function Home() {
         );
       }
 
-      setMensagem(
-        `Sua contribuição de ${quantidade} unidade(s) de "${item.name}" foi registrada. Muito obrigado!`
+      salvarNome(nome);
+      fecharContribuicao();
+      mostrarMensagem(
+        `Sua contribuição de ${quantidade} unidade(s) de "${item.name}" foi registrada. Muito obrigado!`,
+        false
       );
-      setErro(false);
-      setQuantidades(anterior => ({
-        ...anterior,
-        [item.id]: '1',
-      }));
 
       await carregarItens();
     } catch (e) {
-      setErro(true);
-      setMensagem(
+      setErroModal(
         e instanceof Error ? e.message : 'Erro ao registrar a doação.'
       );
       await carregarItens();
     } finally {
-      setEnviando(null);
+      setEnviando(false);
     }
   }
 
@@ -418,7 +482,9 @@ export default function Home() {
           <div
             role="status"
             aria-live="polite"
-            className={`notice ${erro ? 'notice-error' : 'notice-success'}`}
+            className={`notice notice-toast ${
+              erro ? 'notice-error' : 'notice-success'
+            }`}
           >
             <span aria-hidden="true">{erro ? '!' : '✓'}</span>
             <p>{mensagem}</p>
@@ -459,20 +525,6 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="donation-form donor-name-box">
-            <label htmlFor="nome-doador">
-              <span>Seu nome (vale para todos os itens que você escolher)</span>
-              <input
-                id="nome-doador"
-                value={nomeDoador}
-                onChange={e => setNomeDoador(e.target.value)}
-                placeholder="Como podemos te chamar?"
-                maxLength={100}
-                autoComplete="name"
-              />
-            </label>
-          </div>
-
           {carregando ? (
             <div className="empty-state">
               <span className="loading-spinner" />
@@ -484,9 +536,9 @@ export default function Home() {
               <h3>Estamos preparando a missão.</h3>
               <p>Os itens cadastrados aparecerão aqui em breve.</p>
             </div>
-          ) : (
-            <div className="items-grid">
-              {listaFiltrada.map((item, index) => {
+          ) : listaFiltrada.length > 0 && (
+            <ul className="items-list">
+              {listaFiltrada.map(item => {
                 const percentual =
                   item.required_quantity > 0
                     ? Math.min(
@@ -500,98 +552,54 @@ export default function Home() {
                 const concluido = item.remaining_quantity === 0;
 
                 return (
-                  <article
+                  <li
                     key={item.id}
-                    className={`item-card ${
-                      concluido ? 'item-card-complete' : ''
-                    }`}
-                    style={{
-                      animationDelay: `${Math.min(index, 8) * 55}ms`,
-                    }}
+                    className={`item-row ${concluido ? 'item-row-complete' : ''}`}
                   >
-                    <div className="item-card-top">
+                    <div className="item-row-info">
                       <span className="category-label">{item.category}</span>
-                      {concluido ? (
-                        <span className="complete-badge">✓ Concluído</span>
-                      ) : (
-                        <span className="remaining-badge">
-                          Faltam {item.remaining_quantity}
+                      <h3>{item.name}</h3>
+
+                      <div className="item-row-progress">
+                        <div
+                          className="progress-track"
+                          role="progressbar"
+                          aria-label={`Progresso de ${item.name}`}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={percentual}
+                        >
+                          <div
+                            className="progress-fill"
+                            style={{ width: `${percentual}%` }}
+                          />
+                        </div>
+                        <span>
+                          {item.donated_quantity} de {item.required_quantity}
+                          {!concluido && (
+                            <strong> · faltam {item.remaining_quantity}</strong>
+                          )}
                         </span>
-                      )}
-                    </div>
-
-                    <h3>{item.name}</h3>
-
-                    <div className="item-numbers">
-                      <div>
-                        <strong>{item.donated_quantity}</strong>
-                        <span>Já doados</span>
                       </div>
-                      <div className="numbers-divider" />
-                      <div>
-                        <strong>{item.required_quantity}</strong>
-                        <span>Meta total</span>
-                      </div>
-                      <strong className="item-percent">{percentual}%</strong>
-                    </div>
-
-                    <div
-                      className="progress-track"
-                      role="progressbar"
-                      aria-label={`Progresso de ${item.name}`}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={percentual}
-                    >
-                      <div
-                        className="progress-fill"
-                        style={{ width: `${percentual}%` }}
-                      />
                     </div>
 
                     {concluido ? (
-                      <div className="completed-message">
-                        <span aria-hidden="true">✦</span>
-                        Este objetivo foi alcançado. Obrigado!
-                      </div>
+                      <span className="complete-badge">✓ Concluído</span>
                     ) : (
-                      <div className="donation-form">
-                        <label>
-                          <span>Quantidade para doar</span>
-                          <input
-                            type="number"
-                            min="1"
-                            max={item.remaining_quantity}
-                            step="1"
-                            value={quantidades[item.id] ?? '1'}
-                            onChange={e =>
-                              setQuantidades(anterior => ({
-                                ...anterior,
-                                [item.id]: e.target.value,
-                              }))
-                            }
-                          />
-                        </label>
-
-                        <button
-                          type="button"
-                          className="donate-button"
-                          disabled={enviando !== null}
-                          onClick={() => void registrarDoacao(item)}
-                        >
-                          {enviando === item.id
-                            ? 'Registrando contribuição...'
-                            : 'Quero contribuir'}
-                          {enviando !== item.id && (
-                            <span aria-hidden="true">↗</span>
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        className="contribute-button"
+                        aria-label={`Contribuir com ${item.name}`}
+                        onClick={() => abrirContribuicao(item)}
+                      >
+                        <span aria-hidden="true">+</span>
+                        Contribuir
+                      </button>
                     )}
-                  </article>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
 
           {!carregando && itens.length > 0 && listaFiltrada.length === 0 && (
@@ -626,6 +634,113 @@ export default function Home() {
           </p>
         </footer>
       </div>
+
+      <dialog
+        ref={dialogRef}
+        className="contribution-dialog"
+        aria-labelledby="contribuicao-titulo"
+        onClose={() => setItemSelecionadoId(null)}
+        onCancel={e => {
+          if (enviando) e.preventDefault();
+        }}
+        onClick={e => {
+          // Clique fora da caixa (no fundo escuro) fecha a janela.
+          if (e.target === e.currentTarget && !enviando) fecharContribuicao();
+        }}
+      >
+        {itemSelecionado && (
+          <form
+            className="contribution-sheet"
+            onSubmit={e => {
+              e.preventDefault();
+              void registrarDoacao();
+            }}
+          >
+            <div className="contribution-header">
+              <div>
+                <span className="category-label">
+                  {itemSelecionado.category}
+                </span>
+                <h3 id="contribuicao-titulo">{itemSelecionado.name}</h3>
+              </div>
+              <button
+                type="button"
+                className="notice-close"
+                aria-label="Fechar"
+                disabled={enviando}
+                onClick={fecharContribuicao}
+              >
+                ×
+              </button>
+            </div>
+
+            {itemSelecionado.remaining_quantity === 0 ? (
+              <p className="contribution-done">
+                ✓ Este item acabou de ser completado. Obrigado mesmo assim!
+              </p>
+            ) : (
+              <>
+                <div className="contribution-field">
+                  <span>
+                    Quantidade{' '}
+                    <small>(faltam {itemSelecionado.remaining_quantity})</small>
+                  </span>
+                  <div className="quantity-stepper">
+                    <button
+                      type="button"
+                      aria-label="Diminuir quantidade"
+                      disabled={quantidade <= 1 || enviando}
+                      onClick={() => alterarQuantidade(-1)}
+                    >
+                      –
+                    </button>
+                    <output aria-live="polite">{quantidade}</output>
+                    <button
+                      type="button"
+                      aria-label="Aumentar quantidade"
+                      disabled={
+                        quantidade >= itemSelecionado.remaining_quantity ||
+                        enviando
+                      }
+                      onClick={() => alterarQuantidade(1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <label className="contribution-field">
+                  <span>Seu nome</span>
+                  <input
+                    ref={nomeInputRef}
+                    value={nomeDoador}
+                    onChange={e => setNomeDoador(e.target.value)}
+                    placeholder="Como podemos te chamar?"
+                    maxLength={100}
+                    autoComplete="name"
+                  />
+                </label>
+
+                {erroModal && (
+                  <p className="contribution-error" role="alert">
+                    {erroModal}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className="donate-button"
+                  disabled={enviando}
+                >
+                  {enviando
+                    ? 'Registrando contribuição...'
+                    : 'Confirmar contribuição'}
+                </button>
+              </>
+            )}
+          </form>
+        )}
+      </dialog>
     </main>
   );
 }
